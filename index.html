@@ -87,6 +87,12 @@ input, select {
 .green { color:#00d084; }
 .blue { color:#4da6ff; }
 
+/* 🔥 NEW BIG INFO STYLE */
+.biginfo {
+    font-size:26px;
+    font-weight:900;
+}
+
 .bottom {
     margin-top:15px;
     background:#000;
@@ -149,7 +155,7 @@ input, select {
 </div>
 
 <div class="bottom">
-<div>FLAP<br><span class="green">5</span></div>
+<div>FLAP<br><span class="green biginfo">5</span></div>
 <div>ACCEL HT<br><span class="green">1500 ft</span></div>
 <div>V1<br><span id="v1b">---</span></div>
 <div>VR<br><span id="vrb">---</span></div>
@@ -223,10 +229,10 @@ window.calcTakeoff = function(){
     "V1: <span class='green vbig'>" + v1 + "</span><br>" +
     "VR: <span class='green vbig'>" + vr + "</span><br>" +
     "V2: <span class='green vbig'>" + v2 + "</span><br>" +
-    "FLEX: <span class='blue'>" + flex + "°C</span><br>" +
-    "BLEED: " + bleed + "<br>" +
-    "ANTI-ICE: " + antiIce + "<br>" +
-    "FLAPS: 5";
+    "FLEX: <span class='blue biginfo'>" + flex + "°C</span><br>" +
+    "BLEED: <span class='biginfo'>" + bleed + "</span><br>" +
+    "ANTI-ICE: <span class='biginfo'>" + antiIce + "</span><br>" +
+    "FLAPS: <span class='biginfo'>5</span>";
 
     document.getElementById("v1b").innerText = v1;
     document.getElementById("vrb").innerText = vr;
