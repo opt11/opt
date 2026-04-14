@@ -14,8 +14,6 @@ body {
 }
 
 .topbar {
-    position:relative;
-    z-index:2;
     background:#2a2f38;
     padding:12px;
     text-align:center;
@@ -23,8 +21,6 @@ body {
 }
 
 .main {
-    position:relative;
-    z-index:2;
     display:grid;
     grid-template-columns: 1.2fr 1fr;
     gap:20px;
@@ -73,34 +69,24 @@ input, select {
 .vbig { font-size:30px; font-weight:800; }
 .biginfo { font-size:20px; font-weight:800; }
 
-/* =========================
-   BOTTOM BAR
-========================= */
 .bottom {
-    position:relative;
-    z-index:2;
-
     margin-top:15px;
     background:#000;
     padding:18px;
-
     display:grid;
     grid-template-columns: repeat(5,1fr);
     align-items:center;
 }
 
-/* ✈️ ATM WATERMARK (5x BIGGER) */
 .atm-inline {
-    font-size:160px;     /* 👈 5x bigger */
+    font-size:160px;
     font-weight:900;
     letter-spacing:8px;
-
     opacity:0.18;
     text-align:center;
     line-height:1;
 }
 
-/* V speed blocks */
 .bottom span {
     font-size:26px;
     font-weight:800;
@@ -122,6 +108,24 @@ input, select {
 <div class="row"><span class="label">OAT</span><input id="tt" value="15C"></div>
 <div class="row"><span class="label">WIND</span><input id="twind" value="150/5KT"></div>
 <div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
+
+<div class="row">
+<span class="label">RUNWAY HDG</span>
+<input id="rwyhdg" value="090">
+</div>
+
+<div class="row">
+<span class="label">RUNWAY LENGTH</span>
+<input id="rwylength" value="3000m">
+</div>
+
+<div class="row">
+<span class="label">THRUST MODE</span>
+<select id="mode">
+<option value="atm">ATM</option>
+<option value="full">FULL</option>
+</select>
+</div>
 
 <button class="button" onclick="calcTakeoff()">Calculate</button>
 
@@ -148,16 +152,13 @@ input, select {
 
 </div>
 
-<div class="right">SYSTEM ACTIVE</div>
+<div class="right"></div>
 
 </div>
 
-<!-- =========================
-     BOTTOM BAR WITH BIG ATM
-========================= -->
 <div class="bottom">
 
-<div class="atm-inline">ATM</div>
+<div class="atm-inline" id="atmLabel">ATM</div>
 
 <div>FLAP<br><span>5</span></div>
 <div>ACCEL HT<br><span>1500 ft</span></div>
@@ -169,7 +170,6 @@ input, select {
 
 <script>
 
-/* SAFE PARSER */
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
 }
@@ -179,60 +179,118 @@ function wind(v){
     return num(v.length>1 ? v[1] : v[0]);
 }
 
-/* ===== TAKEOFF ===== */
-function calcTakeoff(){
-
-    var w = num(document.getElementById("tw").value);
-    var t = num(document.getElementById("tt").value);
-    var cg = num(document.getElementById("tcg").value);
-    var press = num(document.getElementById("tpress").value);
-    var windv = wind(document.getElementById("twind").value);
-
-    var v1 = 125 + (w-65000)*0.0012 + (t-15)*0.05 - windv*0.015 + (1013-press)*0.015;
-    var vr = 126 + (w-65000)*0.0012 + (t-15)*0.05 - windv*0.015 + (1013-press)*0.015;
-    var v2 = 135 + (w-65000)*0.0012 + (t-15)*0.05 - windv*0.015 + (1013-press)*0.015;
-
-    vr = Math.max(vr, v1+1);
-    v2 = Math.max(v2, vr+6);
-
-    v1 = Math.round(v1 + 12);
-    vr = Math.round(vr + 12);
-    v2 = Math.round(v2 + 12);
-
-    var trim =
-        4.5
-        + (cg - 25) * -0.18
-        + (w - 65000) * 0.000012;
-
-    if(trim < 3.5) trim = 3.5;
-    if(trim > 7.8) trim = 7.8;
-
-    trim = Math.round(trim*10)/10;
-
-    document.getElementById("toOut").innerHTML =
-    "V1: <span class='vbig'>" + v1 + "</span><br>" +
-    "VR: <span class='vbig'>" + vr + "</span><br>" +
-    "V2: <span class='vbig'>" + v2 + "</span><br>" +
-    "TRIM: <span class='biginfo'>" + trim + "</span>";
-
-    document.getElementById("v1b").innerHTML = v1;
-    document.getElementById("vrb").innerHTML = vr;
-    document.getElementById("v2b").innerHTML = v2;
+function runwayLength(v){
+    v = (v+"").toLowerCase().trim();
+    let value = parseFloat(v.replace(/[^0-9.]/g,"")) || 0;
+    if(v.includes("ft")) return value * 0.3048;
+    return value;
 }
 
-/* ===== LANDING ===== */
+function calcTakeoff(){
+
+    const w = num(document.getElementById("tw").value);
+    const t = num(document.getElementById("tt").value);
+    const cg = num(document.getElementById("tcg").value);
+    const press = num(document.getElementById("tpress").value);
+    const windv = wind(document.getElementById("twind").value);
+    const mode = document.getElementById("mode").value;
+
+    const rwyhdg = num(document.getElementById("rwyhdg").value);
+    const rwylength = runwayLength(document.getElementById("rwylength").value);
+
+    document.getElementById("atmLabel").innerHTML =
+        (mode === "atm") ? "ATM" : "FULL";
+
+    // =========================
+    // CORE MODEL (stable)
+    // =========================
+
+    const weightFactor = (w - 65000) * 0.0011;
+    const tempFactor = (t - 15) * 0.22;
+    const pressFactor = (1013 - press) * 0.015;
+    const windFactor = -windv * 0.04;
+
+    const headingPenalty = Math.abs((rwyhdg % 360) - 180) / 180;
+    const rwyEffect = (headingPenalty - 0.5) * 1.5;
+
+    let v1 = 132 + weightFactor + tempFactor + pressFactor + windFactor + rwyEffect;
+    let vr = 134 + weightFactor + tempFactor + pressFactor + windFactor + rwyEffect;
+    let v2 = 144 + weightFactor + tempFactor + pressFactor + windFactor + rwyEffect;
+
+    if(mode === "atm"){
+        v1 -= 1; vr -= 1; v2 -= 1;
+    } else {
+        v1 += 2; vr += 2; v2 += 2;
+    }
+
+    const rwyClamp = Math.min(1.03, Math.max(0.98, rwylength / 2500));
+    v1 *= rwyClamp;
+    vr *= rwyClamp;
+    v2 *= rwyClamp;
+
+    vr = Math.max(vr, v1 + 1);
+    v2 = Math.max(v2, vr + 6);
+
+    // =========================
+    // FINAL CALIBRATION LAYER
+    // =========================
+
+    v1 = Math.round(v1 + 8);
+    vr = Math.round(vr + 8);
+    v2 = Math.round(v2 + 8);
+
+    let flexTemp = "— — —";
+
+    if(mode === "atm"){
+        flexTemp = Math.round(
+            44 +
+            (65000 - w) * 0.0006 +
+            (t - 15) * 0.35
+            - 12
+        );
+    }
+
+    let trim =
+        4.5 +
+        (cg - 25) * -0.18 +
+        (w - 65000) * 0.000012;
+
+    if(mode === "full") trim += 0.3;
+
+    trim = Math.max(3.5, Math.min(7.8, trim));
+    trim = Math.round(trim * 10) / 10;
+
+    let warn = "";
+    if(rwylength < 1500){
+        warn = "<br><span style='color:orange'>WARNING: SHORT RUNWAY</span>";
+    }
+
+    document.getElementById("toOut").innerHTML =
+        "MODE: <span class='biginfo'>" + mode.toUpperCase() + "</span><br>" +
+        "FLEX: <span class='biginfo'>" + flexTemp + "</span><br>" +
+        "V1: <span class='vbig'>" + v1 + "</span><br>" +
+        "VR: <span class='vbig'>" + vr + "</span><br>" +
+        "V2: <span class='vbig'>" + v2 + "</span><br>" +
+        "TRIM: <span class='biginfo'>" + trim + "</span>" +
+        warn;
+
+    document.getElementById("v1b").innerText = v1;
+    document.getElementById("vrb").innerText = vr;
+    document.getElementById("v2b").innerText = v2;
+}
+
 function calcLanding(){
 
-    var w = num(document.getElementById("lw").value);
-    var t = num(document.getElementById("lt").value);
-    var windv = wind(document.getElementById("lwind").value);
+    const w = num(document.getElementById("lw").value);
+    const t = num(document.getElementById("lt").value);
+    const windv = wind(document.getElementById("lwind").value);
 
-    var vref = 125 + (w-60000)*0.0006 + windv*0.2;
-    var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01);
+    const vref = 130 + (w - 60000) * 0.00055 + windv * 0.15;
+    const dist = 1400 * (0.7 + w / 70000) * (1 + (t - 15) * 0.01);
 
     document.getElementById("loOut").innerHTML =
-    "VREF: <span class='biginfo'>" + Math.round(vref) + "</span><br>" +
-    "LDG DIST: <span class='biginfo'>" + Math.round(dist) + " m</span>";
+        "VREF: <span class='biginfo'>" + Math.round(vref) + "</span><br>" +
+        "LDG DIST: <span class='biginfo'>" + Math.round(dist) + " m</span>";
 }
 
 </script>
