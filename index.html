@@ -89,6 +89,12 @@ input { -moz-appearance: textfield; }
     margin-top:10px;
 }
 
+/* FIX: make button behave like old div visually */
+button.button {
+    border: none;
+    width: 100%;
+}
+
 .button:hover { background:#1f66dd; }
 
 .output {
@@ -145,7 +151,9 @@ input { -moz-appearance: textfield; }
         <input id="trwy" value="2500">
     </div>
 
-    <div class="button" onclick="calcTakeoff()">CALCULATE TAKEOFF</div>
+    <div class="button-container">
+        <button class="button" onclick="calcTakeoff()">CALCULATE TAKEOFF</button>
+    </div>
 
     <div class="output" id="toOut">READY</div>
 </div>
@@ -178,7 +186,9 @@ input { -moz-appearance: textfield; }
         </select>
     </div>
 
-    <div class="button" onclick="calcLanding()">CALCULATE LANDING</div>
+    <div class="button-container">
+        <button class="button" onclick="calcLanding()">CALCULATE LANDING</button>
+    </div>
 
     <div class="output" id="loOut">READY</div>
 </div>
