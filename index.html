@@ -8,137 +8,101 @@
 
 body {
     margin:0;
-    font-family: "Segoe UI", Arial;
+    font-family: Arial;
     background:#1c1f26;
     color:#cfd6df;
 }
 
-/* TOP BAR */
 .topbar {
     background:#2a2f38;
-    padding:10px;
+    padding:12px;
     text-align:center;
-    font-weight:600;
-    letter-spacing:1px;
-    font-size:14px;
+    font-weight:bold;
 }
 
-/* MAIN GRID */
+/* layout */
 .main {
     display:grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap:20px;
-    padding:20px;
+    grid-template-columns: 1fr;
+    padding:15px;
 }
 
-/* PANELS */
-.left, .right {
+.left {
     background:#222833;
     padding:15px;
 }
 
-/* ROW STYLE */
+/* rows */
 .row {
     display:flex;
     justify-content:space-between;
-    align-items:center;
     background:#2e3542;
-    padding:8px 10px;
-    margin-bottom:8px;
-    font-size:13px;
+    padding:12px;
+    margin-bottom:10px;
 }
 
-/* LABEL */
-.label {
-    color:#9aa6b2;
-}
+.label { color:#9aa6b2; }
 
-/* INPUTS */
+/* BIG INPUTS */
 input, select {
     background:#1c1f26;
-    border:none;
+    border:1px solid #3a4250;
     color:#00d084;
-    padding:4px 6px;
-    width:100px;
+    padding:10px;
+    width:160px;
+    font-size:16px;
     text-align:right;
 }
 
-/* BUTTON */
+/* BUTTON (old safari safe) */
 .button {
-    width:100%;
     background:#3a4250;
-    border:none;
+    border:1px solid #5a6475;
     padding:10px;
-    color:#fff;
-    font-weight:600;
-    margin-top:10px;
-    cursor:pointer;
+    width:100%;
+    color:white;
+    font-size:16px;
 }
 
-.button:hover {
-    background:#4a5363;
-}
-
-/* OUTPUT TEXT */
+/* OUTPUT */
 .output {
-    margin-top:10px;
+    margin-top:15px;
     font-family:monospace;
-    line-height:1.6;
 }
 
 /* BIG V SPEEDS */
 .vbig {
-    font-size:28px;
-    font-weight:700;
-    letter-spacing:1px;
+    font-size:30px;
+    font-weight:bold;
 }
 
-/* COLORS */
 .green { color:#00d084; }
 .blue { color:#4da6ff; }
-
-/* BOTTOM STRIP */
-.bottom {
-    margin-top:15px;
-    background:#000;
-    padding:15px;
-    display:grid;
-    grid-template-columns: repeat(5,1fr);
-    font-size:14px;
-}
-
-/* BIG bottom speeds */
-.bottom span {
-    font-size:24px;
-    font-weight:700;
-}
 
 </style>
 </head>
 
 <body>
 
-<div class="topbar">PERFORMANCE - TAKEOFF</div>
+<div class="topbar">PERFORMANCE TOOL</div>
 
 <div class="main">
-
-<!-- LEFT SIDE -->
 <div class="left">
 
-<div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000"></div>
-<div class="row"><span class="label">OAT</span><input id="tt" value="15"></div>
-<div class="row"><span class="label">WIND</span><input id="twind" value="0"></div>
-<div class="row"><span class="label">PRESS</span><input id="tpress" value="1013"></div>
-<div class="row"><span class="label">RWY</span><input id="trwy" value="2500"></div>
+<div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
+<div class="row"><span class="label">OAT</span><input id="tt" value="15C"></div>
+<div class="row"><span class="label">WIND</span><input id="twind" value="150/5"></div>
+<div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
+<div class="row"><span class="label">RWY DIST</span><input id="trwy" value="2500m"></div>
 
 <button class="button" onclick="calcTakeoff()">CALCULATE TAKEOFF</button>
 
 <div class="output" id="toOut">READY</div>
 
-<hr style="border-color:#333; margin:15px 0;">
+<hr>
 
-<div class="row"><span class="label">LDG WT</span><input id="lw" value="60000"></div>
-<div class="row"><span class="label">OAT</span><input id="lt" value="15"></div>
+<div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
+<div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
 <div class="row"><span class="label">WIND</span><input id="lwind" value="0"></div>
 
 <div class="row">
@@ -155,65 +119,65 @@ input, select {
 <div class="output" id="loOut">READY</div>
 
 </div>
-
-<!-- RIGHT SIDE -->
-<div class="right">
-
-<div style="font-size:13px; color:#9aa6b2; margin-bottom:10px;">
-Engine Failure Procedure:
 </div>
 
-<div class="blue" style="font-size:13px;">
-SEE SPECIAL PROCEDURE IN AIRPORT INFO – RUNWAY COMMENT
-</div>
-
-<div style="margin-top:20px; font-size:13px;">
-Aircraft: <span class="green">B737-800</span>
-</div>
-
-</div>
-
-</div>
-
-<!-- BOTTOM BAR -->
-<div class="bottom">
-
-<div>
-FLAP<br><span class="green">5</span>
-</div>
-
-<div>
-ACCEL HT<br><span class="green">1500 ft</span>
-</div>
-
-<div>
-V1<br><span id="v1b">---</span>
-</div>
-
-<div>
-VR<br><span id="vrb">---</span>
-</div>
-
-<div>
-V2<br><span id="v2b">---</span>
-</div>
-
-</div>
-
-<!-- SCRIPT -->
+<!-- SCRIPT AT VERY BOTTOM (CRITICAL) -->
 <script>
 
-function num(id){
-    var v = parseFloat(document.getElementById(id).value);
-    return isNaN(v) ? 0 : v;
+/* SAFE PARSERS (NEVER RETURN NaN) */
+
+function safeNum(n){
+    return isNaN(n) ? 0 : n;
 }
 
+function parseWeight(val){
+    val = val.toLowerCase();
+    var num = parseFloat(val);
+    if(isNaN(num)) return 0;
+    if(val.indexOf("lb") !== -1) num *= 0.453592;
+    return num;
+}
+
+function parseTemp(val){
+    val = val.toLowerCase();
+    var num = parseFloat(val);
+    if(isNaN(num)) return 0;
+    if(val.indexOf("f") !== -1) num = (num - 32) * 5/9;
+    return num;
+}
+
+function parsePressure(val){
+    val = val.toLowerCase();
+    var num = parseFloat(val);
+    if(isNaN(num)) return 1013;
+    if(val.indexOf("in") !== -1) num *= 33.864;
+    return num;
+}
+
+function parseWind(val){
+    val = val.toLowerCase();
+    var parts = val.split("/");
+    var num = parseFloat(parts.length > 1 ? parts[1] : parts[0]);
+    return safeNum(num);
+}
+
+function parseDistance(val){
+    val = val.toLowerCase();
+    var num = parseFloat(val);
+    if(isNaN(num)) return 0;
+    if(val.indexOf("ft") !== -1) num *= 0.3048;
+    return num;
+}
+
+/* CALCS */
+
 function calcTakeoff(){
-    var w = num("tw");
-    var t = num("tt");
-    var wind = num("twind");
-    var press = num("tpress");
-    var rwy = num("trwy");
+
+    var w = parseWeight(document.getElementById("tw").value);
+    var t = parseTemp(document.getElementById("tt").value);
+    var wind = parseWind(document.getElementById("twind").value);
+    var press = parsePressure(document.getElementById("tpress").value);
+    var rwy = parseDistance(document.getElementById("trwy").value);
 
     var base = {v1:125, vr:126, v2:135};
 
@@ -221,7 +185,7 @@ function calcTakeoff(){
     var vr = base.vr + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
     var v2 = base.v2 + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
 
-    var spacing = 6 + Math.max(0,(w-65000)*0.0001);
+    var spacing = 6;
     vr = Math.max(vr, v1+1);
     v2 = Math.max(v2, vr+spacing);
 
@@ -229,29 +193,17 @@ function calcTakeoff(){
     vr = Math.round(vr + 12);
     v2 = Math.round(v2 + 12);
 
-    var flex = Math.round(Math.max(35, Math.min(55, 30 + (65000-w)*0.0005 + (15-t)*0.25)));
-
-    var bleed = (rwy < 2000 || w > 68000) ? "REDUCED" : "AUTO";
-    var antiIce = (t < 5) ? "ON" : "OFF";
-
     document.getElementById("toOut").innerHTML =
     "V1: <span class='green vbig'>" + v1 + "</span><br>" +
     "VR: <span class='green vbig'>" + vr + "</span><br>" +
-    "V2: <span class='green vbig'>" + v2 + "</span><br>" +
-    "FLEX: <span class='blue'>" + flex + "°C</span><br>" +
-    "BLEED: " + bleed + "<br>" +
-    "ANTI-ICE: " + antiIce + "<br>" +
-    "FLAPS: 5";
-
-    document.getElementById("v1b").innerText = v1;
-    document.getElementById("vrb").innerText = vr;
-    document.getElementById("v2b").innerText = v2;
+    "V2: <span class='green vbig'>" + v2 + "</span>";
 }
 
 function calcLanding(){
-    var w = num("lw");
-    var t = num("lt");
-    var wind = num("lwind");
+
+    var w = parseWeight(document.getElementById("lw").value);
+    var t = parseTemp(document.getElementById("lt").value);
+    var wind = parseWind(document.getElementById("lwind").value);
     var surf = document.getElementById("lsurf").value;
 
     var vref = 125 + (w-60000)*0.0006 + wind*0.2;
