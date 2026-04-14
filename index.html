@@ -127,7 +127,7 @@ input, select {
 </select>
 </div>
 
-<button class="button" onclick="calcTakeoff()">Calculate</button>
+<button class="button" id="btnTakeoff">Calculate</button>
 
 <div class="output" id="toOut">READY</div>
 
@@ -146,7 +146,7 @@ input, select {
 </select>
 </div>
 
-<button class="button" onclick="calcLanding()">Calculate</button>
+<button class="button" id="btnLanding">Calculate</button>
 
 <div class="output" id="loOut">READY</div>
 
@@ -252,19 +252,12 @@ function calcTakeoff(){
     trim = Math.max(3.5, Math.min(7.8, trim));
     trim = Math.round(trim * 10) / 10;
 
-    let warn = "";
-    if(rwylength < 1500){
-        warn = "<br><span style='color:orange'>WARNING: SHORT RUNWAY</span>";
-    }
-
     document.getElementById("toOut").innerHTML =
-        "MODE: <span class='biginfo'>" + mode.toUpperCase() + "</span><br>" +
-        "FLEX: <span class='biginfo'>" + flexTemp + "</span><br>" +
-        "V1: <span class='vbig'>" + v1 + "</span><br>" +
-        "VR: <span class='vbig'>" + vr + "</span><br>" +
-        "V2: <span class='vbig'>" + v2 + "</span><br>" +
-        "TRIM: <span class='biginfo'>" + trim + "</span>" +
-        warn;
+        "MODE: " + mode.toUpperCase() + "<br>" +
+        "V1: " + v1 + "<br>" +
+        "VR: " + vr + "<br>" +
+        "V2: " + v2 + "<br>" +
+        "TRIM: " + trim;
 
     document.getElementById("v1b").innerText = v1;
     document.getElementById("vrb").innerText = vr;
@@ -281,13 +274,15 @@ function calcLanding(){
     const dist = 1400 * (0.7 + w / 70000) * (1 + (t - 15) * 0.01);
 
     document.getElementById("loOut").innerHTML =
-        "VREF: <span class='biginfo'>" + Math.round(vref) + "</span><br>" +
-        "LDG DIST: <span class='biginfo'>" + Math.round(dist) + " m</span>";
+        "VREF: " + Math.round(vref) + "<br>" +
+        "LDG DIST: " + Math.round(dist) + " m";
 }
 
-/* 🔥 CRITICAL SAFARI FIX */
-window.calcTakeoff = calcTakeoff;
-window.calcLanding = calcLanding;
+/* 🔥 SAFE EVENT BINDING (WORKS EVERYWHERE) */
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("btnTakeoff").addEventListener("click", calcTakeoff);
+    document.getElementById("btnLanding").addEventListener("click", calcLanding);
+});
 
 </script>
 
