@@ -5,6 +5,7 @@
 <title>B737 OPT Performance Tool</title>
 
 <style>
+
 body {
     margin:0;
     font-family: Arial;
@@ -64,23 +65,43 @@ input, select {
     font-family:monospace;
 }
 
-.vbig { font-size:30px; font-weight:800; }
-
 .bottom {
     margin-top:15px;
     background:#000;
     padding:18px;
     display:grid;
-    grid-template-columns: repeat(5,1fr);
+    grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr 1fr;
     align-items:center;
+    text-align:center;
 }
 
 .atm-inline {
-    font-size:160px;
+    font-size:140px;
     font-weight:900;
     opacity:0.18;
-    text-align:center;
+    letter-spacing:6px;
 }
+
+.vbox {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+}
+
+.vlabel {
+    font-size:14px;
+    color:#aaa;
+    margin-bottom:6px;
+    letter-spacing:1px;
+}
+
+.vbig {
+    font-size:34px;
+    font-weight:900;
+    color:#fff;
+}
+
 </style>
 </head>
 
@@ -116,7 +137,7 @@ input, select {
 </select>
 </div>
 
-<!-- ✅ INLINE FIX -->
+<!-- iOS SAFE -->
 <button class="button" onclick="calcTakeoff()">Calculate</button>
 
 <div class="output" id="toOut">READY</div>
@@ -136,7 +157,7 @@ input, select {
 </select>
 </div>
 
-<!-- ✅ INLINE FIX -->
+<!-- iOS SAFE -->
 <button class="button" onclick="calcLanding()">Calculate</button>
 
 <div class="output" id="loOut">READY</div>
@@ -147,15 +168,35 @@ input, select {
 
 </div>
 
+<!-- RESTORED EFB STYLE BOTTOM BAR -->
 <div class="bottom">
 
 <div class="atm-inline" id="atmLabel">ATM</div>
 
-<div>FLAP<br><span>5</span></div>
-<div>ACCEL HT<br><span>1500 ft</span></div>
-<div>V1<br><span id="v1b">---</span></div>
-<div>VR<br><span id="vrb">---</span></div>
-<div>V2<br><span id="v2b">---</span></div>
+<div class="vbox">
+    <div class="vlabel">FLAP</div>
+    <div class="vbig">5</div>
+</div>
+
+<div class="vbox">
+    <div class="vlabel">ACCEL HT</div>
+    <div class="vbig">1500 ft</div>
+</div>
+
+<div class="vbox">
+    <div class="vlabel">V1</div>
+    <div class="vbig" id="v1b">---</div>
+</div>
+
+<div class="vbox">
+    <div class="vlabel">VR</div>
+    <div class="vbig" id="vrb">---</div>
+</div>
+
+<div class="vbox">
+    <div class="vlabel">V2</div>
+    <div class="vbig" id="v2b">---</div>
+</div>
 
 </div>
 
@@ -171,7 +212,7 @@ function wind(v){
 }
 
 function runwayLength(v){
-    v = (v+"").toLowerCase().trim();
+    v = (v+"").toLowerCase();
     var value = parseFloat(v.replace(/[^0-9.]/g,"")) || 0;
     if(v.indexOf("ft") !== -1) return value * 0.3048;
     return value;
@@ -181,7 +222,6 @@ function calcTakeoff(){
 
     var w = num(document.getElementById("tw").value);
     var t = num(document.getElementById("tt").value);
-    var cg = num(document.getElementById("tcg").value);
     var press = num(document.getElementById("tpress").value);
     var windv = wind(document.getElementById("twind").value);
     var mode = document.getElementById("mode").value;
@@ -228,9 +268,9 @@ function calcTakeoff(){
         "VR: " + vr + "<br>" +
         "V2: " + v2;
 
-    document.getElementById("v1b").innerText = v1;
-    document.getElementById("vrb").innerText = vr;
-    document.getElementById("v2b").innerText = v2;
+    document.getElementById("v1b").innerHTML = v1;
+    document.getElementById("vrb").innerHTML = vr;
+    document.getElementById("v2b").innerHTML = v2;
 }
 
 function calcLanding(){
