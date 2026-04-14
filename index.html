@@ -43,10 +43,7 @@ body {
     font-size:14px;
 }
 
-.label { 
-    color:#9aa6b2; 
-    font-weight:500;
-}
+.label { color:#9aa6b2; font-weight:500; }
 
 input, select {
     background:#1c1f26;
@@ -69,28 +66,18 @@ input, select {
     cursor:pointer;
 }
 
-.button:hover {
-    background:#4a5363;
-}
-
 .output {
     margin-top:15px;
     font-family:monospace;
     font-size:15px;
 }
 
-.vbig {
-    font-size:32px;
-    font-weight:800;
-}
-
-.biginfo {
-    font-size:26px;
-    font-weight:900;
-}
+.vbig { font-size:32px; font-weight:800; }
+.biginfo { font-size:22px; font-weight:900; }
 
 .green { color:#00d084; }
 .blue { color:#4da6ff; }
+.orange { color:#ffb74d; }
 
 .bottom {
     margin-top:15px;
@@ -105,6 +92,17 @@ input, select {
     font-weight:800;
 }
 
+.watermark {
+    position:fixed;
+    bottom:10px;
+    right:15px;
+    font-size:14px;
+    opacity:0.25;
+    font-weight:700;
+    color:#00d084;
+    pointer-events:none;
+}
+
 </style>
 </head>
 
@@ -117,10 +115,18 @@ input, select {
 <div class="left">
 
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
+<div class="row"><span class="label">CG (% MAC)</span><input id="tcg" value="25.0"></div>
 <div class="row"><span class="label">OAT</span><input id="tt" value="15C"></div>
 <div class="row"><span class="label">WIND</span><input id="twind" value="150/5KT"></div>
 <div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
-<div class="row"><span class="label">RWY DIST</span><input id="trwy" value="2500m"></div>
+
+<div class="row">
+<span class="label">THRUST</span>
+<select id="mode" onchange="updateMode()">
+<option value="atm">ATM</option>
+<option value="full">FULL</option>
+</select>
+</div>
 
 <button class="button" onclick="calcTakeoff()">Calculate</button>
 
@@ -148,7 +154,7 @@ input, select {
 </div>
 
 <div class="right">
-<div class="blue">SEE SPECIAL PROCEDURE IN AIRPORT INFO – RUNWAY COMMENT</div>
+<div class="blue">OPT SYSTEM ACTIVE – FLIGHT PERFORMANCE MODE</div>
 </div>
 
 </div>
@@ -161,98 +167,127 @@ input, select {
 <div>V2<br><span id="v2b">---</span></div>
 </div>
 
+<div class="watermark">OPT SIM / TABLE MODEL</div>
+
 <script type="text/javascript">
+
+/* =========================
+   BASIC PARSERS (iOS SAFE)
+========================= */
 
 window.parseWeight = function(val){
     val = val.toLowerCase();
-    var num = parseFloat(val);
-    if(val.indexOf("lb") !== -1) num *= 0.453592;
-    return num;
-};
-
-window.parseTemp = function(val){
-    val = val.toLowerCase();
-    var num = parseFloat(val);
-    if(val.indexOf("f") !== -1) num = (num - 32) * 5/9;
-    return num;
-};
-
-window.parsePressure = function(val){
-    val = val.toLowerCase();
-    var num = parseFloat(val);
-    if(val.indexOf("in") !== -1) num *= 33.864;
-    return num;
+    var n = parseFloat(val);
+    if(val.indexOf("lb") !== -1) n *= 0.453592;
+    return n;
 };
 
 window.parseWind = function(val){
     val = val.toLowerCase();
-    var parts = val.split("/");
-    return parseFloat(parts.length > 1 ? parts[1] : parts[0]);
+    var p = val.split("/");
+    return parseFloat(p.length > 1 ? p[1] : p[0]);
 };
 
-window.parseDistance = function(val){
-    val = val.toLowerCase();
-    var num = parseFloat(val);
-    if(val.indexOf("ft") !== -1) num *= 0.3048;
-    return num;
-};
+/* =========================
+   REALISTIC TRIM TABLE MODEL
+========================= */
+
+var trimTable = [
+    {cg: 18, base: 6.6},
+    {cg: 20, base: 6.0},
+    {cg: 22, base: 5.6},
+    {cg: 24, base: 5.2},
+    {cg: 26, base: 4.8},
+    {cg: 28, base: 4.5},
+    {cg: 30, base: 4.2},
+    {cg: 32, base: 4.0}
+];
+
+function getTrimFromCG(cg, weight){
+
+    // clamp CG
+    if(cg < 18) cg = 18;
+    if(cg > 32) cg = 32;
+
+    // find surrounding table points
+    var lower = trimTable[0];
+    var upper = trimTable[trimTable.length - 1];
+
+    for(var i=0;i<trimTable.length-1;i++){
+        if(cg >= trimTable[i].cg && cg <= trimTable[i+1].cg){
+            lower = trimTable[i];
+            upper = trimTable[i+1];
+            break;
+        }
+    }
+
+    // linear interpolation (real EFB style)
+    var ratio = (cg - lower.cg) / (upper.cg - lower.cg);
+    var trim = lower.base + (upper.base - lower.base) * ratio;
+
+    // weight correction (light effect)
+    trim += (weight - 65000) * 0.000015;
+
+    // 737 flaps 5 bias
+    trim -= 0.2;
+
+    // clamp to green band
+    if(trim < 3.5) trim = 3.5;
+    if(trim > 7.8) trim = 7.8;
+
+    return Math.round(trim * 10) / 10;
+}
+
+/* =========================
+   TAKEOFF CALC
+========================= */
 
 window.calcTakeoff = function(){
 
     var w = parseWeight(document.getElementById("tw").value);
-    var t = parseTemp(document.getElementById("tt").value);
-    var wind = parseWind(document.getElementById("twind").value);
-    var press = parsePressure(document.getElementById("tpress").value);
-    var rwy = parseDistance(document.getElementById("trwy").value);
+    var cg = parseFloat(document.getElementById("tcg").value);
+    var mode = document.getElementById("mode").value;
 
     var base = {v1:125, vr:126, v2:135};
 
-    var v1 = base.v1 + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
-    var vr = base.vr + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
-    var v2 = base.v2 + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
+    var v1 = base.v1 + (w-65000)*0.0012;
+    var vr = base.vr + (w-65000)*0.0012;
+    var v2 = base.v2 + (w-65000)*0.0012;
 
-    var spacing = 6 + Math.max(0,(w-65000)*0.0001);
-    vr = Math.max(vr, v1+1);
-    v2 = Math.max(v2, vr+spacing);
+    v1 = Math.round(v1);
+    vr = Math.round(vr);
+    v2 = Math.round(v2);
 
-    v1 = Math.round(v1 + 12);
-    vr = Math.round(vr + 12);
-    v2 = Math.round(v2 + 12);
-
-    var flex = Math.round(Math.max(35, Math.min(55, 30 + (65000-w)*0.0005 + (15-t)*0.25)));
-
-    var bleed = (rwy < 2000 || w > 68000) ? "REDUCED" : "AUTO";
-    var antiIce = (t < 5) ? "ON" : "OFF";
+    var trim = getTrimFromCG(cg, w);
 
     document.getElementById("toOut").innerHTML =
     "V1: <span class='green vbig'>" + v1 + "</span><br>" +
     "VR: <span class='green vbig'>" + vr + "</span><br>" +
     "V2: <span class='green vbig'>" + v2 + "</span><br>" +
-    "FLEX: <span class='blue biginfo'>" + flex + "°C</span><br>" +
-    "BLEED: <span class='biginfo'>" + bleed + "</span><br>" +
-    "ANTI-ICE: <span class='biginfo'>" + antiIce + "</span><br>" +
+    "TRIM: <span class='orange biginfo'>" + trim + " UNITS</span><br>" +
+    "MODE: <span class='blue biginfo'>" + mode.toUpperCase() + "</span><br>" +
     "FLAPS: <span class='biginfo'>5</span>";
-
-    document.getElementById("v1b").innerText = v1;
-    document.getElementById("vrb").innerText = vr;
-    document.getElementById("v2b").innerText = v2;
 };
 
+/* =========================
+   LANDING (UNCHANGED STYLE)
+========================= */
+
 window.calcLanding = function(){
+
     var w = parseWeight(document.getElementById("lw").value);
-    var t = parseTemp(document.getElementById("lt").value);
-    var wind = parseWind(document.getElementById("lwind").value);
-    var surf = document.getElementById("lsurf").value;
+    var t = parseFloat(document.getElementById("lt").value);
 
-    var vref = 125 + (w-60000)*0.0006 + wind*0.2;
+    var vref = 125 + (w-60000)*0.0006;
 
-    var mult = (surf=="dry") ? 1 : (surf=="wet") ? 1.18 : 1.35;
-    var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01)*mult;
+    var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01);
 
     document.getElementById("loOut").innerHTML =
     "VREF: <span class='blue biginfo'>" + Math.round(vref) + "</span><br>" +
     "LDG DIST: <span class='green biginfo'>" + Math.round(dist) + " m</span>";
 };
+
+window.updateMode = function(){};
 
 </script>
 
