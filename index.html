@@ -10,7 +10,28 @@ body {
     margin:0;
     font-family: "Segoe UI", Arial;
     background:#1c1f26;
-    color:#cfd6df;
+    color:#fff;
+}
+
+/* 🔥 BIG ATM WATERMARK (like your image) */
+.atm-watermark {
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) rotate(-10deg);
+    font-size:180px;
+    font-weight:900;
+    letter-spacing:10px;
+    color:#ffffff;
+    opacity:0.05;
+    pointer-events:none;
+    z-index:0;
+}
+
+/* keep UI above watermark */
+body * {
+    position:relative;
+    z-index:1;
 }
 
 .topbar {
@@ -19,6 +40,7 @@ body {
     text-align:center;
     font-weight:600;
     font-size:15px;
+    color:#fff;
 }
 
 .main {
@@ -43,12 +65,16 @@ body {
     font-size:14px;
 }
 
-.label { color:#9aa6b2; font-weight:500; }
+.label { 
+    color:#ccc;
+    font-weight:500;
+}
 
+/* ALL INPUTS WHITE STYLE */
 input, select {
     background:#1c1f26;
     border:1px solid #3a4250;
-    color:#00d084;
+    color:#fff;
     padding:10px 12px;
     width:170px;
     font-size:16px;
@@ -61,7 +87,7 @@ input, select {
     background:#3a4250;
     border:1px solid #5a6475;
     padding:8px 18px;
-    color:#dfe6ef;
+    color:#fff;
     font-size:14px;
     cursor:pointer;
 }
@@ -70,14 +96,25 @@ input, select {
     margin-top:15px;
     font-family:monospace;
     font-size:15px;
+    color:#fff;
 }
 
-.vbig { font-size:32px; font-weight:800; }
-.biginfo { font-size:22px; font-weight:900; }
+.vbig {
+    font-size:32px;
+    font-weight:800;
+    color:#fff;
+}
 
-.green { color:#00d084; }
-.blue { color:#4da6ff; }
-.orange { color:#ffb74d; }
+.biginfo {
+    font-size:22px;
+    font-weight:900;
+    color:#fff;
+}
+
+/* FORCE ALL FORMER COLORS TO WHITE */
+.green, .blue, .orange {
+    color:#fff !important;
+}
 
 .bottom {
     margin-top:15px;
@@ -85,21 +122,22 @@ input, select {
     padding:18px;
     display:grid;
     grid-template-columns: repeat(5,1fr);
+    color:#fff;
 }
 
 .bottom span {
     font-size:26px;
     font-weight:800;
+    color:#fff;
 }
 
-.watermark {
+.watermark-small {
     position:fixed;
     bottom:10px;
     right:15px;
-    font-size:14px;
-    opacity:0.25;
-    font-weight:700;
-    color:#00d084;
+    font-size:12px;
+    opacity:0.2;
+    color:#fff;
     pointer-events:none;
 }
 
@@ -107,6 +145,9 @@ input, select {
 </head>
 
 <body>
+
+<!-- 🔥 BIG ATM WATERMARK -->
+<div class="atm-watermark">ATM</div>
 
 <div class="topbar">PERFORMANCE - TAKEOFF</div>
 
@@ -122,7 +163,7 @@ input, select {
 
 <div class="row">
 <span class="label">THRUST</span>
-<select id="mode" onchange="updateMode()">
+<select id="mode">
 <option value="atm">ATM</option>
 <option value="full">FULL</option>
 </select>
@@ -154,26 +195,22 @@ input, select {
 </div>
 
 <div class="right">
-<div class="blue">OPT SYSTEM ACTIVE – FLIGHT PERFORMANCE MODE</div>
+Performance System Active
 </div>
 
 </div>
 
 <div class="bottom">
-<div>FLAP<br><span class="green">5</span></div>
-<div>ACCEL HT<br><span class="green">1500 ft</span></div>
+<div>FLAP<br><span>5</span></div>
+<div>ACCEL HT<br><span>1500 ft</span></div>
 <div>V1<br><span id="v1b">---</span></div>
 <div>VR<br><span id="vrb">---</span></div>
 <div>V2<br><span id="v2b">---</span></div>
 </div>
 
-<div class="watermark">OPT SIM / TABLE MODEL</div>
+<div class="watermark-small">OPT SIM / ATM MODE</div>
 
 <script type="text/javascript">
-
-/* =========================
-   BASIC PARSERS (iOS SAFE)
-========================= */
 
 window.parseWeight = function(val){
     val = val.toLowerCase();
@@ -189,29 +226,27 @@ window.parseWind = function(val){
 };
 
 /* =========================
-   REALISTIC TRIM TABLE MODEL
+   TRIM TABLE SYSTEM
 ========================= */
 
 var trimTable = [
-    {cg: 18, base: 6.6},
-    {cg: 20, base: 6.0},
-    {cg: 22, base: 5.6},
-    {cg: 24, base: 5.2},
-    {cg: 26, base: 4.8},
-    {cg: 28, base: 4.5},
-    {cg: 30, base: 4.2},
-    {cg: 32, base: 4.0}
+    {cg:18, base:6.6},
+    {cg:20, base:6.0},
+    {cg:22, base:5.6},
+    {cg:24, base:5.2},
+    {cg:26, base:4.8},
+    {cg:28, base:4.5},
+    {cg:30, base:4.2},
+    {cg:32, base:4.0}
 ];
 
 function getTrimFromCG(cg, weight){
 
-    // clamp CG
     if(cg < 18) cg = 18;
     if(cg > 32) cg = 32;
 
-    // find surrounding table points
     var lower = trimTable[0];
-    var upper = trimTable[trimTable.length - 1];
+    var upper = trimTable[trimTable.length-1];
 
     for(var i=0;i<trimTable.length-1;i++){
         if(cg >= trimTable[i].cg && cg <= trimTable[i+1].cg){
@@ -221,17 +256,13 @@ function getTrimFromCG(cg, weight){
         }
     }
 
-    // linear interpolation (real EFB style)
     var ratio = (cg - lower.cg) / (upper.cg - lower.cg);
     var trim = lower.base + (upper.base - lower.base) * ratio;
 
-    // weight correction (light effect)
     trim += (weight - 65000) * 0.000015;
 
-    // 737 flaps 5 bias
     trim -= 0.2;
 
-    // clamp to green band
     if(trim < 3.5) trim = 3.5;
     if(trim > 7.8) trim = 7.8;
 
@@ -239,7 +270,7 @@ function getTrimFromCG(cg, weight){
 }
 
 /* =========================
-   TAKEOFF CALC
+   TAKEOFF
 ========================= */
 
 window.calcTakeoff = function(){
@@ -248,11 +279,9 @@ window.calcTakeoff = function(){
     var cg = parseFloat(document.getElementById("tcg").value);
     var mode = document.getElementById("mode").value;
 
-    var base = {v1:125, vr:126, v2:135};
-
-    var v1 = base.v1 + (w-65000)*0.0012;
-    var vr = base.vr + (w-65000)*0.0012;
-    var v2 = base.v2 + (w-65000)*0.0012;
+    var v1 = 125 + (w-65000)*0.0012;
+    var vr = 126 + (w-65000)*0.0012;
+    var v2 = 135 + (w-65000)*0.0012;
 
     v1 = Math.round(v1);
     vr = Math.round(vr);
@@ -261,16 +290,15 @@ window.calcTakeoff = function(){
     var trim = getTrimFromCG(cg, w);
 
     document.getElementById("toOut").innerHTML =
-    "V1: <span class='green vbig'>" + v1 + "</span><br>" +
-    "VR: <span class='green vbig'>" + vr + "</span><br>" +
-    "V2: <span class='green vbig'>" + v2 + "</span><br>" +
-    "TRIM: <span class='orange biginfo'>" + trim + " UNITS</span><br>" +
-    "MODE: <span class='blue biginfo'>" + mode.toUpperCase() + "</span><br>" +
-    "FLAPS: <span class='biginfo'>5</span>";
+    "V1: <span class='vbig'>" + v1 + "</span><br>" +
+    "VR: <span class='vbig'>" + vr + "</span><br>" +
+    "V2: <span class='vbig'>" + v2 + "</span><br>" +
+    "TRIM: <span class='biginfo'>" + trim + " UNITS</span><br>" +
+    "MODE: <span class='biginfo'>" + mode.toUpperCase() + "</span>";
 };
 
 /* =========================
-   LANDING (UNCHANGED STYLE)
+   LANDING
 ========================= */
 
 window.calcLanding = function(){
@@ -279,15 +307,12 @@ window.calcLanding = function(){
     var t = parseFloat(document.getElementById("lt").value);
 
     var vref = 125 + (w-60000)*0.0006;
-
     var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01);
 
     document.getElementById("loOut").innerHTML =
-    "VREF: <span class='blue biginfo'>" + Math.round(vref) + "</span><br>" +
-    "LDG DIST: <span class='green biginfo'>" + Math.round(dist) + " m</span>";
+    "VREF: <span class='biginfo'>" + Math.round(vref) + "</span><br>" +
+    "LDG DIST: <span class='biginfo'>" + Math.round(dist) + " m</span>";
 };
-
-window.updateMode = function(){};
 
 </script>
 
