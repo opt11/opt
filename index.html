@@ -12,13 +12,6 @@ body {
     color: #e6e6e6;
 }
 
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input { -moz-appearance: textfield; }
-
 .header {
     background: #0f1620;
     padding: 14px 20px;
@@ -26,8 +19,6 @@ input { -moz-appearance: textfield; }
     justify-content: space-between;
     border-bottom: 1px solid #1f2a3a;
 }
-
-.header span { color:#8aa0b6; }
 
 .container {
     width: 1000px;
@@ -51,7 +42,6 @@ input { -moz-appearance: textfield; }
     color:#8aa0b6;
     margin-bottom:12px;
     border-bottom:1px solid #1f2a3a;
-    padding-bottom:6px;
 }
 
 .field {
@@ -75,13 +65,10 @@ input { -moz-appearance: textfield; }
 .button {
     background:#2d7dff;
     padding:10px;
-    text-align:center;
     border-radius:6px;
-    cursor:pointer;
-    font-weight:bold;
-    margin-top:10px;
     border:none;
     width:100%;
+    font-weight:bold;
 }
 
 .output {
@@ -106,61 +93,57 @@ input { -moz-appearance: textfield; }
 </div>
 
 <div class="container">
-
 <div class="row">
 
 <!-- TAKEOFF -->
 <div class="panel">
-    <div class="title">TAKEOFF DATA</div>
+<div class="title">TAKEOFF DATA</div>
 
-    <div class="field"><span>Weight</span><input id="tw" value="65000"></div>
-    <div class="field"><span>OAT</span><input id="tt" value="15"></div>
-    <div class="field"><span>Wind</span><input id="twind" value="0"></div>
-    <div class="field"><span>Pressure</span><input id="tpress" value="1013"></div>
-    <div class="field"><span>Runway</span><input id="trwy" value="2500"></div>
+<div class="field"><span>Weight</span><input id="tw" value="65000"></div>
+<div class="field"><span>OAT</span><input id="tt" value="15"></div>
+<div class="field"><span>Wind</span><input id="twind" value="0"></div>
+<div class="field"><span>Pressure</span><input id="tpress" value="1013"></div>
+<div class="field"><span>Runway</span><input id="trwy" value="2500"></div>
 
-    <button class="button" id="toBtn">CALCULATE TAKEOFF</button>
+<button class="button" onclick="calcTakeoff()">CALCULATE TAKEOFF</button>
 
-    <div class="output" id="toOut">READY</div>
+<div class="output" id="toOut">READY</div>
 </div>
 
 <!-- LANDING -->
 <div class="panel">
-    <div class="title">LANDING DATA</div>
+<div class="title">LANDING DATA</div>
 
-    <div class="field"><span>Weight</span><input id="lw" value="60000"></div>
-    <div class="field"><span>OAT</span><input id="lt" value="15"></div>
-    <div class="field"><span>Wind</span><input id="lwind" value="0"></div>
+<div class="field"><span>Weight</span><input id="lw" value="60000"></div>
+<div class="field"><span>OAT</span><input id="lt" value="15"></div>
+<div class="field"><span>Wind</span><input id="lwind" value="0"></div>
 
-    <div class="field">
-        <span>Surface</span>
-        <select id="lsurf">
-            <option value="dry">Dry</option>
-            <option value="wet">Wet</option>
-            <option value="contaminated">Contaminated</option>
-        </select>
-    </div>
+<div class="field">
+<span>Surface</span>
+<select id="lsurf">
+<option value="dry">Dry</option>
+<option value="wet">Wet</option>
+<option value="contaminated">Contaminated</option>
+</select>
+</div>
 
-    <button class="button" id="ldgBtn">CALCULATE LANDING</button>
+<button class="button" onclick="calcLanding()">CALCULATE LANDING</button>
 
-    <div class="output" id="loOut">READY</div>
+<div class="output" id="loOut">READY</div>
 </div>
 
 </div>
 </div>
 
+<!-- SCRIPT AT VERY BOTTOM -->
 <script>
-
-window.onload = function() {
 
 function num(id){
     var v = parseFloat(document.getElementById(id).value);
     return isNaN(v) ? 0 : v;
 }
 
-/* TAKEOFF */
 function calcTakeoff(){
-
     var w = num("tw");
     var t = num("tt");
     var wind = num("twind");
@@ -196,9 +179,7 @@ function calcTakeoff(){
     "FLAPS: 5";
 }
 
-/* LANDING */
 function calcLanding(){
-
     var w = num("lw");
     var t = num("lt");
     var wind = num("lwind");
@@ -213,12 +194,6 @@ function calcLanding(){
     "VREF: <span class='yellow'>" + Math.round(vref) + "</span><br>" +
     "LDG DIST: <span class='green'>" + Math.round(dist) + " m</span>";
 }
-
-/* Attach handlers */
-document.getElementById("toBtn").onclick = calcTakeoff;
-document.getElementById("ldgBtn").onclick = calcLanding;
-
-};
 
 </script>
 
