@@ -13,20 +13,9 @@ body {
     color:#fff;
 }
 
-.atm-watermark {
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%) rotate(-10deg);
-    font-size:180px;
-    font-weight:900;
-    opacity:0.05;
-    pointer-events:none;
-}
-
-body * { position:relative; z-index:1; }
-
 .topbar {
+    position:relative;
+    z-index:2;
     background:#2a2f38;
     padding:12px;
     text-align:center;
@@ -34,6 +23,8 @@ body * { position:relative; z-index:1; }
 }
 
 .main {
+    position:relative;
+    z-index:2;
     display:grid;
     grid-template-columns: 1.2fr 1fr;
     gap:20px;
@@ -82,14 +73,34 @@ input, select {
 .vbig { font-size:30px; font-weight:800; }
 .biginfo { font-size:20px; font-weight:800; }
 
+/* =========================
+   BOTTOM BAR
+========================= */
 .bottom {
+    position:relative;
+    z-index:2;
+
     margin-top:15px;
     background:#000;
     padding:18px;
+
     display:grid;
     grid-template-columns: repeat(5,1fr);
+    align-items:center;
 }
 
+/* ✈️ ATM WATERMARK (5x BIGGER) */
+.atm-inline {
+    font-size:160px;     /* 👈 5x bigger */
+    font-weight:900;
+    letter-spacing:8px;
+
+    opacity:0.18;
+    text-align:center;
+    line-height:1;
+}
+
+/* V speed blocks */
 .bottom span {
     font-size:26px;
     font-weight:800;
@@ -99,8 +110,6 @@ input, select {
 </head>
 
 <body>
-
-<div class="atm-watermark">ATM</div>
 
 <div class="topbar">PERFORMANCE - TAKEOFF</div>
 
@@ -118,7 +127,7 @@ input, select {
 
 <div class="output" id="toOut">READY</div>
 
-<hr style="border-color:#333">
+<hr style="border-color:#333;">
 
 <div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
 <div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
@@ -139,28 +148,35 @@ input, select {
 
 </div>
 
-<div class="right">SYSTEM READY</div>
+<div class="right">SYSTEM ACTIVE</div>
 
 </div>
 
+<!-- =========================
+     BOTTOM BAR WITH BIG ATM
+========================= -->
 <div class="bottom">
+
+<div class="atm-inline">ATM</div>
+
 <div>FLAP<br><span>5</span></div>
 <div>ACCEL HT<br><span>1500 ft</span></div>
 <div>V1<br><span id="v1b">---</span></div>
 <div>VR<br><span id="vrb">---</span></div>
 <div>V2<br><span id="v2b">---</span></div>
+
 </div>
 
 <script>
 
-/* SAFE PARSER (iOS 9 FRIENDLY) */
+/* SAFE PARSER */
 function num(v){
-    return parseFloat((v + "").replace(/[^0-9.\-]/g,"")) || 0;
+    return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
 }
 
 function wind(v){
-    v = (v + "").split("/");
-    return num(v.length > 1 ? v[1] : v[0]);
+    v = (v+"").split("/");
+    return num(v.length>1 ? v[1] : v[0]);
 }
 
 /* ===== TAKEOFF ===== */
@@ -183,9 +199,14 @@ function calcTakeoff(){
     vr = Math.round(vr + 12);
     v2 = Math.round(v2 + 12);
 
-    var trim = 5.5 + (cg-25)*-0.15 + (w-65000)*0.00001;
+    var trim =
+        4.5
+        + (cg - 25) * -0.18
+        + (w - 65000) * 0.000012;
+
     if(trim < 3.5) trim = 3.5;
     if(trim > 7.8) trim = 7.8;
+
     trim = Math.round(trim*10)/10;
 
     document.getElementById("toOut").innerHTML =
