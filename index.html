@@ -84,14 +84,13 @@ input, select {
     font-weight:800;
 }
 
-.green { color:#00d084; }
-.blue { color:#4da6ff; }
-
-/* 🔥 NEW BIG INFO STYLE */
 .biginfo {
     font-size:26px;
     font-weight:900;
 }
+
+.green { color:#00d084; }
+.blue { color:#4da6ff; }
 
 .bottom {
     margin-top:15px;
@@ -155,7 +154,7 @@ input, select {
 </div>
 
 <div class="bottom">
-<div>FLAP<br><span class="green biginfo">5</span></div>
+<div>FLAP<br><span class="green">5</span></div>
 <div>ACCEL HT<br><span class="green">1500 ft</span></div>
 <div>V1<br><span id="v1b">---</span></div>
 <div>VR<br><span id="vrb">---</span></div>
@@ -251,8 +250,8 @@ window.calcLanding = function(){
     var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01)*mult;
 
     document.getElementById("loOut").innerHTML =
-    "VREF: <span class='blue'>" + Math.round(vref) + "</span><br>" +
-    "LDG DIST: <span class='green'>" + Math.round(dist) + " m</span>";
+    "VREF: <span class='blue biginfo'>" + Math.round(vref) + "</span><br>" +
+    "LDG DIST: <span class='green biginfo'>" + Math.round(dist) + " m</span>";
 };
 
 </script>
