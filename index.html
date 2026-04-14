@@ -32,9 +32,6 @@ input { -moz-appearance: textfield; }
 .container {
     width: 1000px;
     margin: 20px auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
 }
 
 .row {
@@ -59,7 +56,6 @@ input { -moz-appearance: textfield; }
 
 .field {
     display:flex;
-    align-items:center;
     justify-content:space-between;
     background:#1a2633;
     padding:10px;
@@ -67,16 +63,13 @@ input { -moz-appearance: textfield; }
     border-radius:6px;
 }
 
-.field input,
-.field select {
-    flex:1;
+.field input, .field select {
     margin-left:12px;
-    padding:6px 8px;
+    padding:6px;
     border-radius:5px;
     border:1px solid #2a3a4d;
     background:#0f1620;
     color:#e6e6e6;
-    outline:none;
 }
 
 .button {
@@ -87,15 +80,9 @@ input { -moz-appearance: textfield; }
     cursor:pointer;
     font-weight:bold;
     margin-top:10px;
+    border:none;
+    width:100%;
 }
-
-/* FIX: make button behave like old div visually */
-button.button {
-    border: none;
-    width: 100%;
-}
-
-.button:hover { background:#1f66dd; }
 
 .output {
     margin-top:10px;
@@ -126,34 +113,13 @@ button.button {
 <div class="panel">
     <div class="title">TAKEOFF DATA</div>
 
-    <div class="field">
-        <span>Weight (kg)</span>
-        <input id="tw" value="65000">
-    </div>
+    <div class="field"><span>Weight</span><input id="tw" value="65000"></div>
+    <div class="field"><span>OAT</span><input id="tt" value="15"></div>
+    <div class="field"><span>Wind</span><input id="twind" value="0"></div>
+    <div class="field"><span>Pressure</span><input id="tpress" value="1013"></div>
+    <div class="field"><span>Runway</span><input id="trwy" value="2500"></div>
 
-    <div class="field">
-        <span>OAT (°C)</span>
-        <input id="tt" value="15">
-    </div>
-
-    <div class="field">
-        <span>Wind (KT)</span>
-        <input id="twind" value="0">
-    </div>
-
-    <div class="field">
-        <span>Pressure (hPa)</span>
-        <input id="tpress" value="1013">
-    </div>
-
-    <div class="field">
-        <span>Runway Length (m)</span>
-        <input id="trwy" value="2500">
-    </div>
-
-    <div class="button-container">
-        <button class="button" onclick="calcTakeoff()">CALCULATE TAKEOFF</button>
-    </div>
+    <button class="button" id="toBtn">CALCULATE TAKEOFF</button>
 
     <div class="output" id="toOut">READY</div>
 </div>
@@ -162,20 +128,9 @@ button.button {
 <div class="panel">
     <div class="title">LANDING DATA</div>
 
-    <div class="field">
-        <span>Landing Weight (kg)</span>
-        <input id="lw" value="60000">
-    </div>
-
-    <div class="field">
-        <span>OAT (°C)</span>
-        <input id="lt" value="15">
-    </div>
-
-    <div class="field">
-        <span>Wind (KT)</span>
-        <input id="lwind" value="0">
-    </div>
+    <div class="field"><span>Weight</span><input id="lw" value="60000"></div>
+    <div class="field"><span>OAT</span><input id="lt" value="15"></div>
+    <div class="field"><span>Wind</span><input id="lwind" value="0"></div>
 
     <div class="field">
         <span>Surface</span>
@@ -186,92 +141,84 @@ button.button {
         </select>
     </div>
 
-    <div class="button-container">
-        <button class="button" onclick="calcLanding()">CALCULATE LANDING</button>
-    </div>
+    <button class="button" id="ldgBtn">CALCULATE LANDING</button>
 
     <div class="output" id="loOut">READY</div>
 </div>
 
 </div>
-
 </div>
 
 <script>
 
+window.onload = function() {
+
 function num(id){
-    return parseFloat(document.getElementById(id).value) || 0;
+    var v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? 0 : v;
 }
 
-/* ================= TAKEOFF ================= */
+/* TAKEOFF */
 function calcTakeoff(){
 
-    let w = num("tw");
-    let t = num("tt");
-    let wind = num("twind");
-    let press = num("tpress");
-    let rwy = num("trwy");
+    var w = num("tw");
+    var t = num("tt");
+    var wind = num("twind");
+    var press = num("tpress");
+    var rwy = num("trwy");
 
-    let base = {v1:125, vr:126, v2:135};
+    var base = {v1:125, vr:126, v2:135};
 
-    let weight = (w-65000)*0.0012;
-    let temp = (t-15)*0.05;
-    let windCorr = wind*-0.015;
-    let pressure = (1013-press)*0.015;
+    var v1 = base.v1 + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
+    var vr = base.vr + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
+    var v2 = base.v2 + (w-65000)*0.0012 + (t-15)*0.05 + wind*-0.015 + (1013-press)*0.015;
 
-    let v1 = base.v1 + weight + temp + windCorr + pressure;
-    let vr = base.vr + weight + temp + windCorr + pressure;
-    let v2 = base.v2 + weight + temp + windCorr + pressure;
+    var spacing = 6 + Math.max(0,(w-65000)*0.0001);
+    vr = Math.max(vr, v1+1);
+    v2 = Math.max(v2, vr+spacing);
 
-    let spacing = 6 + Math.max(0,(w-65000)*0.0001);
+    v1 = Math.round(v1 + 12);
+    vr = Math.round(vr + 12);
+    v2 = Math.round(v2 + 12);
 
-    vr = Math.max(vr, v1 + 1);
-    v2 = Math.max(v2, vr + spacing);
+    var flex = Math.round(Math.max(35, Math.min(55, 30 + (65000-w)*0.0005 + (15-t)*0.25)));
 
-    let bias = 7;
-    let vTrim = 5;
-
-    v1 = Math.round(v1 + bias + vTrim);
-    vr = Math.round(vr + bias + vTrim);
-    v2 = Math.round(v2 + bias + vTrim);
-
-    let flex = 30 + (65000-w)*0.0005 + (15-t)*0.25;
-    flex = Math.max(35, Math.min(55, flex));
-    flex = Math.round(flex);
-
-    let bleed = (rwy < 2000 || w > 68000) ? "REDUCED" : "AUTO";
-    let antiIce = (t < 5) ? "ON" : "OFF";
+    var bleed = (rwy < 2000 || w > 68000) ? "REDUCED" : "AUTO";
+    var antiIce = (t < 5) ? "ON" : "OFF";
 
     document.getElementById("toOut").innerHTML =
-    `V1: <span class="green">${v1}</span><br>
-     VR: <span class="green">${vr}</span><br>
-     V2: <span class="green">${v2}</span><br>
-     FLEX: <span class="yellow">${flex}°C</span><br>
-     BLEED: ${bleed}<br>
-     ANTI-ICE: ${antiIce}<br>
-     FLAPS: 5`;
+    "V1: <span class='green'>" + v1 + "</span><br>" +
+    "VR: <span class='green'>" + vr + "</span><br>" +
+    "V2: <span class='green'>" + v2 + "</span><br>" +
+    "FLEX: <span class='yellow'>" + flex + "°C</span><br>" +
+    "BLEED: " + bleed + "<br>" +
+    "ANTI-ICE: " + antiIce + "<br>" +
+    "FLAPS: 5";
 }
 
-/* ================= LANDING ================= */
+/* LANDING */
 function calcLanding(){
 
-    let w = num("lw");
-    let t = num("lt");
-    let wind = num("lwind");
-    let surf = document.getElementById("lsurf").value;
+    var w = num("lw");
+    var t = num("lt");
+    var wind = num("lwind");
+    var surf = document.getElementById("lsurf").value;
 
-    let vref = 125 + (w-60000)*0.0006 + wind*0.2;
+    var vref = 125 + (w-60000)*0.0006 + wind*0.2;
 
-    let surfaceMult =
-        surf=="dry"?1 :
-        surf=="wet"?1.18 : 1.35;
-
-    let dist = 1400 * (0.7 + w/70000) * (1 + (t-15)*0.01) * surfaceMult;
+    var mult = (surf=="dry") ? 1 : (surf=="wet") ? 1.18 : 1.35;
+    var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01)*mult;
 
     document.getElementById("loOut").innerHTML =
-    `VREF: <span class="yellow">${Math.round(vref)}</span><br>
-     LDG DIST: <span class="green">${Math.round(dist)} m</span>`;
+    "VREF: <span class='yellow'>" + Math.round(vref) + "</span><br>" +
+    "LDG DIST: <span class='green'>" + Math.round(dist) + " m</span>";
 }
+
+/* Attach handlers */
+document.getElementById("toBtn").onclick = calcTakeoff;
+document.getElementById("ldgBtn").onclick = calcLanding;
+
+};
 
 </script>
 
