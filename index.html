@@ -65,32 +65,27 @@ input, select {
     font-family:monospace;
 }
 
+/* ✅ PROPER HORIZONTAL EFB STRIP */
 .bottom {
     margin-top:15px;
     background:#000;
     padding:18px;
     display:grid;
-    grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 1fr;
     align-items:center;
     text-align:center;
+    position:relative;
 }
 
 .atm-inline {
     font-size:140px;
     font-weight:900;
     opacity:0.18;
-    letter-spacing:6px;
-}
-
-.vbox {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
+    letter-spacing:8px;
 }
 
 .vlabel {
-    font-size:14px;
+    font-size:13px;
     color:#aaa;
     margin-bottom:6px;
     letter-spacing:1px;
@@ -100,6 +95,13 @@ input, select {
     font-size:34px;
     font-weight:900;
     color:#fff;
+}
+
+.vcell {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
 }
 
 </style>
@@ -137,7 +139,6 @@ input, select {
 </select>
 </div>
 
-<!-- iOS SAFE -->
 <button class="button" onclick="calcTakeoff()">Calculate</button>
 
 <div class="output" id="toOut">READY</div>
@@ -157,7 +158,6 @@ input, select {
 </select>
 </div>
 
-<!-- iOS SAFE -->
 <button class="button" onclick="calcLanding()">Calculate</button>
 
 <div class="output" id="loOut">READY</div>
@@ -168,32 +168,32 @@ input, select {
 
 </div>
 
-<!-- RESTORED EFB STYLE BOTTOM BAR -->
+<!-- ✅ RESTORED HORIZONTAL EFB STRIP -->
 <div class="bottom">
 
 <div class="atm-inline" id="atmLabel">ATM</div>
 
-<div class="vbox">
+<div class="vcell">
     <div class="vlabel">FLAP</div>
     <div class="vbig">5</div>
 </div>
 
-<div class="vbox">
+<div class="vcell">
     <div class="vlabel">ACCEL HT</div>
     <div class="vbig">1500 ft</div>
 </div>
 
-<div class="vbox">
+<div class="vcell">
     <div class="vlabel">V1</div>
     <div class="vbig" id="v1b">---</div>
 </div>
 
-<div class="vbox">
+<div class="vcell">
     <div class="vlabel">VR</div>
     <div class="vbig" id="vrb">---</div>
 </div>
 
-<div class="vbox">
+<div class="vcell">
     <div class="vlabel">V2</div>
     <div class="vbig" id="v2b">---</div>
 </div>
@@ -214,7 +214,10 @@ function wind(v){
 function runwayLength(v){
     v = (v+"").toLowerCase();
     var value = parseFloat(v.replace(/[^0-9.]/g,"")) || 0;
+
+    // iOS SAFE (no includes)
     if(v.indexOf("ft") !== -1) return value * 0.3048;
+
     return value;
 }
 
