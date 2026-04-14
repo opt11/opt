@@ -176,7 +176,7 @@ function num(v){
 
 function wind(v){
     v = (v+"").split("/");
-    return num(v.length>1 ? v[1] : v[0]);
+    return num(v.length > 1 ? v[1] : v[0]);
 }
 
 function runwayLength(v){
@@ -200,10 +200,6 @@ function calcTakeoff(){
 
     document.getElementById("atmLabel").innerHTML =
         (mode === "atm") ? "ATM" : "FULL";
-
-    // =========================
-    // CORE MODEL (stable)
-    // =========================
 
     const weightFactor = (w - 65000) * 0.0011;
     const tempFactor = (t - 15) * 0.22;
@@ -230,10 +226,6 @@ function calcTakeoff(){
 
     vr = Math.max(vr, v1 + 1);
     v2 = Math.max(v2, vr + 6);
-
-    // =========================
-    // FINAL CALIBRATION LAYER
-    // =========================
 
     v1 = Math.round(v1 + 8);
     vr = Math.round(vr + 8);
@@ -292,6 +284,10 @@ function calcLanding(){
         "VREF: <span class='biginfo'>" + Math.round(vref) + "</span><br>" +
         "LDG DIST: <span class='biginfo'>" + Math.round(dist) + " m</span>";
 }
+
+/* 🔥 CRITICAL SAFARI FIX */
+window.calcTakeoff = calcTakeoff;
+window.calcLanding = calcLanding;
 
 </script>
 
