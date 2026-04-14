@@ -15,10 +15,10 @@ body {
 
 .topbar {
     background:#2a2f38;
-    padding:12px;
+    padding:10px;
     text-align:center;
     font-weight:600;
-    font-size:15px;
+    font-size:14px;
 }
 
 /* layout */
@@ -31,45 +31,38 @@ body {
 
 .left, .right {
     background:#222833;
-    padding:18px;
+    padding:15px;
 }
 
-/* ROW STYLE */
 .row {
     display:flex;
     justify-content:space-between;
     align-items:center;
     background:#2e3542;
-    padding:12px 14px;
-    margin-bottom:12px;
-    font-size:14px;
+    padding:8px 10px;
+    margin-bottom:8px;
+    font-size:13px;
 }
 
-.label { 
-    color:#9aa6b2; 
-    font-weight:500;
-}
+.label { color:#9aa6b2; }
 
-/* 🔥 BIG INPUTS */
 input, select {
     background:#1c1f26;
-    border:1px solid #3a4250;
+    border:none;
     color:#00d084;
-    padding:10px 12px;
-    width:170px;
-    font-size:16px;
-    border-radius:4px;
+    padding:4px 6px;
+    width:130px;
     text-align:right;
 }
 
-/* BUTTON (EFB STYLE) */
+/* BUTTON LIKE IMAGE */
 .button {
     float:right;
     background:#3a4250;
     border:1px solid #5a6475;
-    padding:8px 18px;
+    padding:6px 14px;
     color:#dfe6ef;
-    font-size:14px;
+    font-size:13px;
     cursor:pointer;
 }
 
@@ -81,16 +74,14 @@ input, select {
 .output {
     margin-top:15px;
     font-family:monospace;
-    font-size:15px;
 }
 
 /* BIG V SPEEDS */
 .vbig {
-    font-size:32px;
-    font-weight:800;
+    font-size:28px;
+    font-weight:700;
 }
 
-/* COLORS */
 .green { color:#00d084; }
 .blue { color:#4da6ff; }
 
@@ -98,14 +89,14 @@ input, select {
 .bottom {
     margin-top:15px;
     background:#000;
-    padding:18px;
+    padding:15px;
     display:grid;
     grid-template-columns: repeat(5,1fr);
 }
 
 .bottom span {
-    font-size:26px;
-    font-weight:800;
+    font-size:24px;
+    font-weight:700;
 }
 
 </style>
@@ -223,45 +214,4 @@ function calcTakeoff(){
     v2 = Math.max(v2, vr+spacing);
 
     v1 = Math.round(v1 + 12);
-    vr = Math.round(vr + 12);
-    v2 = Math.round(v2 + 12);
-
-    var flex = Math.round(Math.max(35, Math.min(55, 30 + (65000-w)*0.0005 + (15-t)*0.25)));
-
-    var bleed = (rwy < 2000 || w > 68000) ? "REDUCED" : "AUTO";
-    var antiIce = (t < 5) ? "ON" : "OFF";
-
-    document.getElementById("toOut").innerHTML =
-    "V1: <span class='green vbig'>" + v1 + "</span><br>" +
-    "VR: <span class='green vbig'>" + vr + "</span><br>" +
-    "V2: <span class='green vbig'>" + v2 + "</span><br>" +
-    "FLEX: <span class='blue'>" + flex + "°C</span><br>" +
-    "BLEED: " + bleed + "<br>" +
-    "ANTI-ICE: " + antiIce + "<br>" +
-    "FLAPS: 5";
-
-    document.getElementById("v1b").innerText = v1;
-    document.getElementById("vrb").innerText = vr;
-    document.getElementById("v2b").innerText = v2;
-}
-
-function calcLanding(){
-    var w = parseWeight(document.getElementById("lw").value);
-    var t = parseTemp(document.getElementById("lt").value);
-    var wind = parseWind(document.getElementById("lwind").value);
-    var surf = document.getElementById("lsurf").value;
-
-    var vref = 125 + (w-60000)*0.0006 + wind*0.2;
-
-    var mult = (surf=="dry") ? 1 : (surf=="wet") ? 1.18 : 1.35;
-    var dist = 1400*(0.7 + w/70000)*(1+(t-15)*0.01)*mult;
-
-    document.getElementById("loOut").innerHTML =
-    "VREF: <span class='blue'>" + Math.round(vref) + "</span><br>" +
-    "LDG DIST: <span class='green'>" + Math.round(dist) + " m</span>";
-}
-
-</script>
-
-</body>
-</html>
+    vr =
