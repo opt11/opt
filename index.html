@@ -38,15 +38,31 @@ input, select {
     text-align:right;
 }
 
+/* BUTTON ROW */
+.buttonRow {
+    display:flex;
+    justify-content:space-between;
+    padding:0 12px;
+}
+
 .button {
-    width:calc(100% - 24px);
-    margin:12px;
     padding:12px;
     background:#1f2633;
     border:1px solid #2f394a;
     color:#fff;
 }
 
+/* smaller calculate */
+.calcBtn {
+    width:65%;
+}
+
+/* mode toggle */
+.modeBtn {
+    width:30%;
+}
+
+/* DISPLAY */
 .bottom {
     margin:12px;
     background:#000;
@@ -91,6 +107,8 @@ input, select {
 <body>
 
 <div class="topbar">PERFORMANCE</div>
+
+<!-- INPUTS (UNCHANGED) -->
 
 <div class="row">
 <div class="half"><span class="label">WEIGHT</span><input id="tw" value="51600kg"></div>
@@ -163,7 +181,13 @@ input, select {
 <div class="half"></div>
 </div>
 
-<button class="button" onclick="calc()">CALCULATE</button>
+<!-- NEW BUTTON ROW -->
+<div class="buttonRow">
+<button class="button calcBtn" onclick="calc()">CALCULATE</button>
+<button class="button modeBtn" onclick="toggleMode()" id="phaseBtn">TKOF</button>
+</div>
+
+<!-- DISPLAY -->
 
 <div class="bottom">
 
@@ -216,6 +240,12 @@ function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
 }
 
+/* PHASE TOGGLE */
+function toggleMode(){
+    var btn = document.getElementById("phaseBtn");
+    btn.innerHTML = (btn.innerHTML === "TKOF") ? "LDG" : "TKOF";
+}
+
 function calc(){
 
 var w = num(document.getElementById("tw").value);
@@ -234,12 +264,21 @@ if(flapSel==="opt"){
 
 document.getElementById("flapOut").innerHTML = flapSel;
 
-/* TOWG (correct reduction) */
+/* TOWG */
 var towg = w - 200;
 document.getElementById("tow").innerHTML = "TOWG " + Math.round(towg) + " kg";
 
-/* FLEX (raised into realistic range) */
+/* FLEX with ATM MODE EFFECT */
 var selTemp = 55 - (w / 4000) - (len / 2000);
+
+var mode = document.getElementById("atmMode").value;
+
+if(mode === "max"){
+    selTemp = oat + 5; // basically no flex
+}
+if(mode === "full"){
+    selTemp += 10; // deeper derate
+}
 
 if(document.getElementById("anti").value==="on") selTemp -= 2;
 if(document.getElementById("packs").value==="on") selTemp -= 1;
@@ -257,7 +296,7 @@ document.getElementById("accel").innerHTML = accelHt;
 var trimVal = 7.2 - (cgVal * 0.12);
 document.getElementById("trim").innerHTML = trimVal.toFixed(1);
 
-/* SPEEDS (raised ~10kts) */
+/* SPEEDS */
 var base = 110 + (w / 3000);
 
 var v1v = base;
@@ -278,8 +317,8 @@ document.getElementById("vr").innerHTML = Math.round(vrv);
 document.getElementById("v2").innerHTML = Math.round(v2v);
 
 /* WATERMARK */
-var mode = document.getElementById("atmMode").value;
-document.getElementById("modeLabel").innerHTML = (mode === "full") ? "FULL" : "ATM";
+document.getElementById("modeLabel").innerHTML =
+(mode === "full") ? "FULL" : "ATM";
 
 }
 
