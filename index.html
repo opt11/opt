@@ -9,117 +9,135 @@
 body {
     margin:0;
     font-family: Arial, Helvetica, sans-serif;
-    background:#0e1117;
+    background:#0b0f14;
     color:#fff;
 }
 
+/* TOP BAR */
 .topbar {
-    background:#1a1f28;
-    padding:10px;
+    background:#121720;
+    padding:8px;
     text-align:center;
-    font-size:14px;
-    letter-spacing:1px;
-    color:#aaa;
+    font-size:13px;
+    letter-spacing:1.5px;
+    color:#9aa4b2;
 }
 
+/* MAIN LAYOUT */
 .main {
     display:grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap:15px;
-    padding:15px;
+    grid-template-columns: 1.1fr 1fr;
+    gap:10px;
+    padding:12px;
 }
 
-.left, .right {
-    background:#161b22;
-    padding:15px;
+.left {
+    background:#10151d;
+    padding:12px;
 }
 
+.right {
+    background:#0d1218;
+}
+
+/* ROWS — now flat like OPT */
 .row {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    background:#202632;
-    padding:10px;
-    margin-bottom:8px;
+    padding:8px 4px;
+    border-bottom:1px solid #1c2330;
 }
 
-.label { color:#9aa4b2; font-size:13px; }
-
-input, select {
-    background:#0e1117;
-    border:1px solid #2c3440;
-    color:#fff;
-    padding:8px;
-    width:150px;
-    text-align:right;
-}
-
-.button {
-    float:right;
-    background:#2c3440;
-    border:1px solid #3d4655;
-    padding:6px 14px;
-    color:#fff;
+/* LABELS */
+.label {
     font-size:12px;
+    color:#7f8a99;
+    letter-spacing:0.5px;
 }
 
+/* INPUTS */
+input, select {
+    background:transparent;
+    border:none;
+    border-bottom:1px solid #2a3240;
+    color:#fff;
+    padding:4px;
+    width:120px;
+    text-align:right;
+    font-size:13px;
+}
+
+/* BUTTON */
+.button {
+    margin-top:8px;
+    float:right;
+    background:#1f2633;
+    border:1px solid #2f394a;
+    padding:5px 12px;
+    font-size:12px;
+    color:#fff;
+}
+
+/* OUTPUT TEXT */
 .output {
     margin-top:10px;
     font-family:monospace;
-    color:#ccc;
+    font-size:12px;
+    color:#b8c1cc;
 }
 
-/* ✅ REAL OPT STYLE STRIP */
+/* BOTTOM STRIP */
 .bottom {
-    margin-top:10px;
+    margin-top:6px;
     background:#000;
-    padding:15px 20px;
+    padding:12px 18px;
     display:flex;
     align-items:center;
-    justify-content:space-between;
     position:relative;
 }
 
-/* BIG ATM WATERMARK (LEFT) */
+/* ATM WATERMARK */
 .atm-inline {
     position:absolute;
-    left:20px;
+    left:25px;
     top:50%;
     transform:translateY(-50%);
-    font-size:120px;
+    font-size:150px;
     font-weight:900;
-    opacity:0.12;
-    letter-spacing:10px;
+    opacity:0.10;
+    letter-spacing:12px;
 }
 
-/* SPEED BLOCK (RIGHT SIDE CLUSTERED) */
+/* RIGHT SIDE DATA STRIP */
 .vstrip {
     margin-left:auto;
     display:flex;
-    gap:35px;
-    align-items:center;
+    align-items:flex-end;
+    gap:28px;
 }
 
-/* EACH VALUE */
+/* EACH CELL */
 .vcell {
     display:flex;
     flex-direction:column;
     align-items:center;
 }
 
-/* LABELS */
+/* SMALL LABEL */
 .vlabel {
-    font-size:11px;
-    color:#777;
-    margin-bottom:4px;
+    font-size:10px;
+    color:#6f7a88;
+    margin-bottom:3px;
     letter-spacing:1px;
 }
 
-/* BIG NUMBERS */
+/* BIG VALUE */
 .vbig {
-    font-size:36px;
+    font-size:40px;
     font-weight:900;
-    color:#fff;
+    color:#ffffff;
+    line-height:1;
 }
 
 </style>
@@ -157,11 +175,11 @@ input, select {
 </select>
 </div>
 
-<button class="button" onclick="calcTakeoff()">Calculate</button>
+<button class="button" onclick="calcTakeoff()">CALC</button>
 
 <div class="output" id="toOut">READY</div>
 
-<hr style="border-color:#333;">
+<hr style="border-color:#1c2330;">
 
 <div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
 <div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
@@ -176,7 +194,7 @@ input, select {
 </select>
 </div>
 
-<button class="button" onclick="calcLanding()">Calculate</button>
+<button class="button" onclick="calcLanding()">CALC</button>
 
 <div class="output" id="loOut">READY</div>
 
@@ -186,7 +204,7 @@ input, select {
 
 </div>
 
-<!-- ✅ FIXED REALISTIC STRIP -->
+<!-- OPT STRIP -->
 <div class="bottom">
 
 <div class="atm-inline" id="atmLabel">ATM</div>
@@ -224,7 +242,7 @@ input, select {
 
 <script>
 
-// 🔒 UNCHANGED LOGIC
+/* 🔒 EXACT SAME LOGIC — UNTOUCHED */
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
