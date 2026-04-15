@@ -13,64 +13,75 @@ body {
     color:#fff;
 }
 
-/* TOP BAR */
+/* TOP */
 .topbar {
     background:#121720;
     padding:8px;
     text-align:center;
     font-size:13px;
-    letter-spacing:1.5px;
     color:#9aa4b2;
+    letter-spacing:1px;
 }
 
 /* MAIN LAYOUT */
 .main {
     display:grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap:10px;
-    padding:12px;
+    grid-template-columns: 80px 1fr;
+    height:calc(100vh - 140px);
 }
 
-.left {
+/* LEFT MODE BAR */
+.sidebar {
+    background:#0e131a;
+    display:flex;
+    flex-direction:column;
+}
+
+.tab {
+    padding:15px 5px;
+    text-align:center;
+    font-size:12px;
+    color:#7f8a99;
+    border-bottom:1px solid #1c2330;
+    cursor:pointer;
+}
+
+.tab.active {
+    background:#1a2230;
+    color:#fff;
+}
+
+/* CONTENT */
+.content {
+    padding:12px;
     background:#10151d;
-    padding:12px;
 }
 
-.right {
-    background:#0d1218;
-}
-
-/* ROWS — now flat like OPT */
+/* ROW STYLE */
 .row {
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    padding:8px 4px;
+    padding:8px 0;
     border-bottom:1px solid #1c2330;
 }
 
-/* LABELS */
 .label {
     font-size:12px;
     color:#7f8a99;
-    letter-spacing:0.5px;
 }
 
-/* INPUTS */
 input, select {
     background:transparent;
     border:none;
     border-bottom:1px solid #2a3240;
     color:#fff;
-    padding:4px;
-    width:120px;
+    width:130px;
     text-align:right;
-    font-size:13px;
 }
 
 /* BUTTON */
 .button {
-    margin-top:8px;
+    margin-top:10px;
     float:right;
     background:#1f2633;
     border:1px solid #2f394a;
@@ -79,7 +90,6 @@ input, select {
     color:#fff;
 }
 
-/* OUTPUT TEXT */
 .output {
     margin-top:10px;
     font-family:monospace;
@@ -87,57 +97,50 @@ input, select {
     color:#b8c1cc;
 }
 
-/* BOTTOM STRIP */
+/* BOTTOM OPT STRIP */
 .bottom {
-    margin-top:6px;
     background:#000;
-    padding:12px 18px;
+    height:120px;
     display:flex;
     align-items:center;
+    justify-content:center;
     position:relative;
 }
 
-/* ATM WATERMARK */
+/* CENTERED ATM */
 .atm-inline {
     position:absolute;
-    left:25px;
-    top:50%;
-    transform:translateY(-50%);
-    font-size:150px;
+    font-size:140px;
     font-weight:900;
-    opacity:0.10;
-    letter-spacing:12px;
+    opacity:0.08;
+    letter-spacing:10px;
 }
 
-/* RIGHT SIDE DATA STRIP */
+/* EVENLY SPACED SPEEDS */
 .vstrip {
-    margin-left:auto;
+    width:100%;
     display:flex;
+    justify-content:space-around;
     align-items:flex-end;
-    gap:28px;
+    z-index:2;
 }
 
-/* EACH CELL */
+/* CELL */
 .vcell {
     display:flex;
     flex-direction:column;
     align-items:center;
 }
 
-/* SMALL LABEL */
 .vlabel {
-    font-size:10px;
+    font-size:11px;
     color:#6f7a88;
-    margin-bottom:3px;
-    letter-spacing:1px;
+    margin-bottom:4px;
 }
 
-/* BIG VALUE */
 .vbig {
-    font-size:40px;
+    font-size:42px;
     font-weight:900;
-    color:#ffffff;
-    line-height:1;
 }
 
 </style>
@@ -145,11 +148,21 @@ input, select {
 
 <body>
 
-<div class="topbar">PERFORMANCE - TAKEOFF</div>
+<div class="topbar">PERFORMANCE</div>
 
 <div class="main">
 
-<div class="left">
+<!-- LEFT SELECTOR -->
+<div class="sidebar">
+    <div class="tab active" onclick="showPanel('tko', this)">TKO</div>
+    <div class="tab" onclick="showPanel('ldg', this)">LDG</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- TAKEOFF -->
+<div id="tkoPanel">
 
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
 <div class="row"><span class="label">CG (%MAC)</span><input id="tcg" value="25"></div>
@@ -157,15 +170,8 @@ input, select {
 <div class="row"><span class="label">WIND</span><input id="twind" value="150/5KT"></div>
 <div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
 
-<div class="row">
-<span class="label">RUNWAY HDG</span>
-<input id="rwyhdg" value="090">
-</div>
-
-<div class="row">
-<span class="label">RUNWAY LENGTH</span>
-<input id="rwylength" value="3000m">
-</div>
+<div class="row"><span class="label">RUNWAY HDG</span><input id="rwyhdg" value="090"></div>
+<div class="row"><span class="label">RUNWAY LENGTH</span><input id="rwylength" value="3000m"></div>
 
 <div class="row">
 <span class="label">THRUST MODE</span>
@@ -176,10 +182,12 @@ input, select {
 </div>
 
 <button class="button" onclick="calcTakeoff()">CALC</button>
-
 <div class="output" id="toOut">READY</div>
 
-<hr style="border-color:#1c2330;">
+</div>
+
+<!-- LANDING -->
+<div id="ldgPanel" style="display:none">
 
 <div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
 <div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
@@ -195,12 +203,11 @@ input, select {
 </div>
 
 <button class="button" onclick="calcLanding()">CALC</button>
-
 <div class="output" id="loOut">READY</div>
 
 </div>
 
-<div class="right"></div>
+</div>
 
 </div>
 
@@ -212,28 +219,28 @@ input, select {
 <div class="vstrip">
 
 <div class="vcell">
-    <div class="vlabel">FLAP</div>
-    <div class="vbig">5</div>
+<div class="vlabel">FLAP</div>
+<div class="vbig">5</div>
 </div>
 
 <div class="vcell">
-    <div class="vlabel">ACCEL HT</div>
-    <div class="vbig">1500</div>
+<div class="vlabel">ACCEL HT</div>
+<div class="vbig">1500</div>
 </div>
 
 <div class="vcell">
-    <div class="vlabel">V1</div>
-    <div class="vbig" id="v1b">---</div>
+<div class="vlabel">V1</div>
+<div class="vbig" id="v1b">---</div>
 </div>
 
 <div class="vcell">
-    <div class="vlabel">VR</div>
-    <div class="vbig" id="vrb">---</div>
+<div class="vlabel">VR</div>
+<div class="vbig" id="vrb">---</div>
 </div>
 
 <div class="vcell">
-    <div class="vlabel">V2</div>
-    <div class="vbig" id="v2b">---</div>
+<div class="vlabel">V2</div>
+<div class="vbig" id="v2b">---</div>
 </div>
 
 </div>
@@ -242,7 +249,17 @@ input, select {
 
 <script>
 
-/* 🔒 EXACT SAME LOGIC — UNTOUCHED */
+/* PANEL SWITCH */
+function showPanel(type, el){
+    document.getElementById("tkoPanel").style.display = (type==="tko") ? "block" : "none";
+    document.getElementById("ldgPanel").style.display = (type==="ldg") ? "block" : "none";
+
+    var tabs = document.getElementsByClassName("tab");
+    for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+    el.classList.add("active");
+}
+
+/* ORIGINAL LOGIC BELOW — UNCHANGED */
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
