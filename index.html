@@ -22,29 +22,6 @@ body {
 }
 
 .main {
-    display:grid;
-    grid-template-columns: 80px 1fr;
-}
-
-.sidebar {
-    background:#0e131a;
-}
-
-.tab {
-    padding:15px;
-    text-align:center;
-    font-size:12px;
-    color:#7f8a99;
-    border-bottom:1px solid #1c2330;
-    cursor:pointer;
-}
-
-.tab.active {
-    background:#1a2230;
-    color:#fff;
-}
-
-.content {
     padding:12px;
 }
 
@@ -69,7 +46,6 @@ input, select {
     text-align:right;
 }
 
-/* BUTTON */
 .button {
     margin-top:15px;
     width:100%;
@@ -104,7 +80,7 @@ input, select {
     letter-spacing:18px;
 }
 
-/* TOP ROW */
+/* TOP */
 .topline {
     display:flex;
     justify-content:space-between;
@@ -112,7 +88,7 @@ input, select {
 }
 
 .tow {
-    font-size:38px;
+    font-size:40px;
     font-weight:900;
 }
 
@@ -121,33 +97,32 @@ input, select {
     font-weight:700;
 }
 
-/* SPEED STRIP FIXED */
+/* STRIP */
 .vstrip {
     display:flex;
     justify-content:space-between;
     align-items:flex-end;
-    z-index:2;
     gap:10px;
+    z-index:2;
 }
 
-/* FORCE WIDTHS */
 .vcell {
     flex:1;
     text-align:center;
-    min-width:80px;
 }
 
-/* SMALL CELLS */
+/* CONFIG BIGGER */
 .vsmall .vlabel {
-    font-size:11px;
+    font-size:12px;
     color:#666;
 }
 
 .vsmall .vbig {
-    font-size:20px;
+    font-size:30px;
+    font-weight:700;
 }
 
-/* BIG SPEED CELLS */
+/* SPEEDS */
 .vbigblock .vlabel {
     font-size:12px;
     color:#888;
@@ -158,7 +133,6 @@ input, select {
     font-weight:900;
 }
 
-/* EXTRA SPACING BETWEEN CONFIG AND SPEEDS */
 .divider {
     width:20px;
 }
@@ -172,14 +146,8 @@ input, select {
 
 <div class="main">
 
-<div class="sidebar">
-    <div class="tab active">TKO</div>
-</div>
-
-<div class="content">
-
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
-<div class="row"><span class="label">CG</span><input id="tcg" value="25"></div>
+<div class="row"><span class="label">CG</span><input value="25"></div>
 <div class="row"><span class="label">OAT</span><input id="tt" value="15C"></div>
 <div class="row"><span class="label">WIND</span><input id="twind" value="150/5KT"></div>
 <div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
@@ -187,10 +155,20 @@ input, select {
 <div class="row"><span class="label">RWY LEN</span><input id="rwylength" value="3000m"></div>
 
 <div class="row">
-<span class="label">MODE</span>
-<select id="mode">
-<option value="atm">ATM</option>
+<span class="label">ATM MODE</span>
+<select id="atmMode">
+<option value="max">MAX</option>
+<option value="opt">OPT</option>
 <option value="full">FULL</option>
+</select>
+</div>
+
+<div class="row">
+<span class="label">RWY COND</span>
+<select id="rwycond">
+<option value="dry">DRY</option>
+<option value="wet">WET</option>
+<option value="cont">CONT</option>
 </select>
 </div>
 
@@ -201,7 +179,7 @@ input, select {
 <div class="atm-inline" id="atmLabel">ATM</div>
 
 <div class="topline">
-    <div class="tow" id="tow">TOW ---</div>
+    <div class="tow" id="tow">TOWG ---</div>
     <div class="sel" id="selTemp">SEL ---</div>
 </div>
 
@@ -214,7 +192,7 @@ input, select {
 
 <div class="vcell vsmall">
 <div class="vlabel">ACCEL HT</div>
-<div class="vbig">1500</div>
+<div class="vbig" id="accel">1500</div>
 </div>
 
 <div class="divider"></div>
@@ -240,19 +218,24 @@ input, select {
 
 </div>
 
-</div>
-
 <script>
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
 }
 
-/* DETECT UNIT */
 function getUnit(v){
     v = (v+"").toLowerCase();
     if(v.includes("lb")) return "LB";
     return "KG";
+}
+
+function toKg(v, unit){
+    return (unit==="LB") ? v * 0.453592 : v;
+}
+
+function fromKg(v, unit){
+    return (unit==="LB") ? v / 0.453592 : v;
 }
 
 function wind(v){
@@ -273,57 +256,61 @@ function calcTakeoff(){
     var unit = getUnit(raw);
     var w = num(raw);
 
+    var wkg = toKg(w, unit);
+
     var t = num(document.getElementById("tt").value);
     var press = num(document.getElementById("tpress").value);
     var windv = wind(document.getElementById("twind").value);
-    var mode = document.getElementById("mode").value;
+    var atmMode = document.getElementById("atmMode").value;
+    var cond = document.getElementById("rwycond").value;
 
-    var rwyhdg = num(document.getElementById("rwyhdg").value);
     var rwylength = runwayLength(document.getElementById("rwylength").value);
 
-    document.getElementById("atmLabel").innerHTML = (mode === "atm") ? "ATM" : "FULL";
-    document.getElementById("tow").innerHTML = "TOW " + w + " " + unit;
+    /* TOWG CALC */
+    var taxiBurn = 200 + (wkg - 65000) * 0.002;
+    var towg = wkg - taxiBurn;
 
-    /* SEL TEMP FIXED */
-    var sel = Math.round(15 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
-    sel = Math.max(20, Math.min(55, sel));
+    var towgDisplay = Math.round(fromKg(towg, unit));
+    document.getElementById("tow").innerHTML = "TOWG " + towgDisplay + " " + unit;
+
+    document.getElementById("atmLabel").innerHTML =
+        (atmMode === "full") ? "FULL" : "ATM";
+
+    /* SEL TEMP */
+    var baseSel = 40 - (wkg-65000)/180 - (t-15)*1.1;
+
+    if(atmMode === "max") baseSel += 10;
+    if(atmMode === "full") baseSel = 0;
+
+    if(cond === "wet") baseSel -= 5;
+    if(cond === "cont") baseSel -= 10;
+
+    var sel = Math.round(baseSel);
+    sel = Math.max(20, Math.min(65, sel));
 
     document.getElementById("selTemp").innerHTML =
-        (mode==="atm") ? ("SEL " + sel + "°C") : "FULL";
+        (atmMode==="full") ? "FULL" : ("SEL " + sel + "°C");
 
-    var weightFactor = (w - 65000) * 0.0011;
-    var tempFactor = (t - 15) * 0.22;
-    var pressFactor = (1013 - press) * 0.015;
-    var windFactor = -windv * 0.04;
+    /* ACCEL HEIGHT */
+    var accel = 1500;
+    if(wkg > 70000) accel += 500;
+    if(rwylength < 2200) accel += 500;
+    if(rwylength < 1800) accel += 500;
+    accel = Math.min(3000, accel);
 
-    var headingPenalty = Math.abs((rwyhdg % 360) - 180) / 180;
-    var rwyEffect = (headingPenalty - 0.5) * 1.5;
+    document.getElementById("accel").innerHTML = accel;
 
-    var v1 = 132 + weightFactor + tempFactor + pressFactor + windFactor + rwyEffect;
-    var vr = 134 + weightFactor + tempFactor + pressFactor + windFactor + rwyEffect;
-    var v2 = 144 + weightFactor + tempFactor + pressFactor + windFactor + rwyEffect;
+    /* SPEEDS */
+    var v1 = 132 + (wkg-65000)*0.0011;
+    var vr = v1 + 2;
+    var v2 = vr + 10;
 
-    if(mode === "atm"){
-        v1 -= 1; vr -= 1; v2 -= 1;
-    } else {
-        v1 += 2; vr += 2; v2 += 2;
-    }
+    if(cond === "wet"){ v1+=2; vr+=2; v2+=2; }
+    if(cond === "cont"){ v1+=4; vr+=4; v2+=4; }
 
-    var rwyClamp = Math.min(1.03, Math.max(0.98, rwylength / 2500));
-    v1 *= rwyClamp;
-    vr *= rwyClamp;
-    v2 *= rwyClamp;
-
-    vr = Math.max(vr, v1 + 1);
-    v2 = Math.max(v2, vr + 6);
-
-    v1 = Math.round(v1 + 8);
-    vr = Math.round(vr + 8);
-    v2 = Math.round(v2 + 8);
-
-    document.getElementById("v1b").innerHTML = v1;
-    document.getElementById("vrb").innerHTML = vr;
-    document.getElementById("v2b").innerHTML = v2;
+    document.getElementById("v1b").innerHTML = Math.round(v1);
+    document.getElementById("vrb").innerHTML = Math.round(vr);
+    document.getElementById("v2b").innerHTML = Math.round(v2);
 }
 
 </script>
