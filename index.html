@@ -101,7 +101,6 @@ input, select {
 
 <div class="topbar">PERFORMANCE</div>
 
-<!-- INPUTS -->
 <div id="takeoffInputs">
 
 <div class="row">
@@ -177,7 +176,7 @@ input, select {
 
 </div>
 
-<!-- BUTTONS (INLINE ONCLICK RESTORED) -->
+<!-- BUTTONS (IMPORTANT: INLINE ONCLICK FOR IOS 9) -->
 <div class="buttonRow">
 <button class="button calcBtn" onclick="calc()">CALCULATE</button>
 <button class="button modeBtn" onclick="toggleMode()" id="phaseBtn">TKOF</button>
@@ -229,9 +228,103 @@ input, select {
 
 </div>
 
-<!-- SCRIPT MOVED TO BOTTOM (CRITICAL FIX FOR iOS 9) -->
+<!-- SCRIPT MUST BE AT BOTTOM FOR OLD SAFARI -->
 <script>
-// your existing calc + toggleMode stays unchanged
+
+function num(v){
+    v = (v+"").toLowerCase();
+    return parseFloat(v.replace(/[^0-9.\-]/g,"")) || 0;
+}
+
+/* FORCE GLOBAL SCOPE FOR iOS 9 */
+window.toggleMode = function(){
+
+    var btn = document.getElementById("phaseBtn");
+
+    if(btn.innerHTML === "TKOF"){
+        btn.innerHTML = "LDG";
+        document.getElementById("takeoffInputs").style.display = "none";
+    } else {
+        btn.innerHTML = "TKOF";
+        document.getElementById("takeoffInputs").style.display = "block";
+    }
+};
+
+window.calc = function(){
+
+    var w = num(document.getElementById("tw").value);
+    var cgVal = num(document.getElementById("cg").value);
+    var len = num(document.getElementById("rwylength").value);
+    var oat = num(document.getElementById("tt").value);
+
+    var flapSel = document.getElementById("flap").value;
+
+    if(flapSel === "opt"){
+        if(len < 6000) flapSel = "15";
+        else if(len < 8000) flapSel = "5";
+        else flapSel = "1";
+    }
+
+    document.getElementById("flapOut").innerHTML = flapSel;
+
+    /* TOW */
+    var towg = w * 0.98;
+    document.getElementById("tow").innerHTML = "TOW " + Math.round(towg) + " kg";
+
+    /* FLEX (FIXED ATM LOGIC) */
+    var mode = document.getElementById("atmMode").value;
+
+    var selTemp = oat + 8;
+
+    if(mode === "max") selTemp -= 6;
+    if(mode === "opt") selTemp += 2;
+    if(mode === "full") selTemp += 8;
+
+    if(document.getElementById("anti").value === "on") selTemp -= 2;
+    if(document.getElementById("packs").value === "on") selTemp -= 1;
+
+    if(selTemp < oat) selTemp = oat;
+
+    document.getElementById("sel").innerHTML =
+        "SEL " + Math.round(selTemp) + "°C";
+
+    /* RTG EFFECT (FIXED) */
+    var rtg = document.getElementById("rtg").value;
+    var accel = 1500;
+
+    if(len < 7000) accel += 500;
+    if(rtg === "1") accel -= 120;
+    if(rtg === "2") accel -= 200;
+
+    document.getElementById("accel").innerHTML = accel;
+
+    /* TRIM */
+    var trimVal = 7.2 - (cgVal * 0.1);
+    document.getElementById("trim").innerHTML = trimVal.toFixed(1);
+
+    /* SPEEDS */
+    var base = 110 + (w / 3500);
+
+    var v1 = base;
+    var vr = base + 2;
+    var v2 = base + 12;
+
+    if(rtg === "1"){ v1-=2; vr-=2; v2-=2; }
+    if(rtg === "2"){ v1-=4; vr-=4; v2-=4; }
+
+    if(len < 7000){
+        v1 -= 3;
+        vr -= 2;
+    }
+
+    document.getElementById("v1").innerHTML = Math.round(v1);
+    document.getElementById("vr").innerHTML = Math.round(vr);
+    document.getElementById("v2").innerHTML = Math.round(v2);
+
+    document.getElementById("modeLabel").innerHTML =
+        (mode === "full") ? "FULL" : "ATM";
+};
+
 </script>
 
 </body>
