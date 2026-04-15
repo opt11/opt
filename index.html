@@ -27,6 +27,7 @@ body {
     grid-template-columns: 80px 1fr;
 }
 
+/* SIDEBAR */
 .sidebar {
     background:#0e131a;
 }
@@ -45,6 +46,7 @@ body {
     color:#fff;
 }
 
+/* CONTENT */
 .content {
     padding:12px;
 }
@@ -77,36 +79,55 @@ input, select {
     float:right;
     background:#1f2633;
     border:1px solid #2f394a;
-    padding:5px 12px;
+    padding:6px 14px;
     font-size:12px;
     color:#fff;
 }
 
-/* 🔥 BIG OPT DISPLAY */
+/* 🔥 OPT DISPLAY */
 .bottom {
+    margin-top:20px;
     background:#000;
-    height:220px;
+    height:260px;
     display:flex;
     flex-direction:column;
     justify-content:center;
-    padding:15px;
+    padding:20px;
+    position:relative;
 }
 
-/* TOP LINE (MODE + TOW + SEL TEMP) */
+/* HUGE WATERMARK */
+.atm-inline {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    font-size:220px;
+    font-weight:900;
+    opacity:0.05;
+    letter-spacing:18px;
+    pointer-events:none;
+}
+
+/* TOP LINE */
 .topline {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:15px;
-    font-size:14px;
-    color:#ccc;
+    margin-bottom:25px;
+    z-index:2;
 }
 
-/* CENTER MODE */
-.mode {
-    font-size:32px;
+/* BIG TOW */
+.tow {
+    font-size:36px;
     font-weight:900;
-    color:#fff;
+}
+
+/* SEL TEMP */
+.sel {
+    font-size:26px;
+    font-weight:700;
 }
 
 /* SPEED STRIP */
@@ -114,9 +135,10 @@ input, select {
     display:flex;
     justify-content:space-around;
     align-items:flex-end;
+    z-index:2;
 }
 
-/* CELL */
+/* SPEED CELLS */
 .vcell {
     text-align:center;
 }
@@ -124,11 +146,11 @@ input, select {
 .vlabel {
     font-size:12px;
     color:#777;
-    margin-bottom:5px;
+    margin-bottom:6px;
 }
 
 .vbig {
-    font-size:48px;
+    font-size:52px;
     font-weight:900;
 }
 
@@ -169,39 +191,14 @@ input, select {
 
 <button class="button" onclick="calcTakeoff()">CALC</button>
 
-</div>
-
-<!-- LANDING -->
-<div id="ldgPanel" style="display:none">
-
-<div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
-<div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
-<div class="row"><span class="label">WIND</span><input id="lwind" value="0"></div>
-
-<div class="row">
-<span class="label">SURFACE</span>
-<select id="lsurf">
-<option value="dry">Dry</option>
-<option value="wet">Wet</option>
-<option value="contaminated">Contaminated</option>
-</select>
-</div>
-
-<button class="button" onclick="calcLanding()">CALC</button>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- 🔥 MAIN DISPLAY -->
+<!-- 🔥 DISPLAY DIRECTLY BELOW BUTTON -->
 <div class="bottom">
 
+<div class="atm-inline" id="atmLabel">ATM</div>
+
 <div class="topline">
-    <div id="tow">TOW ---</div>
-    <div class="mode" id="modeDisplay">---</div>
-    <div id="selTemp">SEL ---</div>
+    <div class="tow" id="tow">TOW ---</div>
+    <div class="sel" id="selTemp">SEL ---</div>
 </div>
 
 <div class="vstrip">
@@ -235,9 +232,34 @@ input, select {
 
 </div>
 
+</div>
+
+<!-- LANDING -->
+<div id="ldgPanel" style="display:none">
+
+<div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
+<div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
+<div class="row"><span class="label">WIND</span><input id="lwind" value="0"></div>
+
+<div class="row">
+<span class="label">SURFACE</span>
+<select id="lsurf">
+<option value="dry">Dry</option>
+<option value="wet">Wet</option>
+<option value="contaminated">Contaminated</option>
+</select>
+</div>
+
+<button class="button" onclick="calcLanding()">CALC</button>
+
+</div>
+
+</div>
+
+</div>
+
 <script>
 
-/* PANEL SWITCH */
 function showPanel(type, el){
     document.getElementById("tkoPanel").style.display = (type==="tko") ? "block" : "none";
     document.getElementById("ldgPanel").style.display = (type==="ldg") ? "block" : "none";
@@ -246,8 +268,6 @@ function showPanel(type, el){
     for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
     el.classList.add("active");
 }
-
-/* SAME LOGIC + DISPLAY ADDITIONS */
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
@@ -276,13 +296,14 @@ function calcTakeoff(){
     var rwyhdg = num(document.getElementById("rwyhdg").value);
     var rwylength = runwayLength(document.getElementById("rwylength").value);
 
-    /* DISPLAY */
-    document.getElementById("modeDisplay").innerHTML = mode.toUpperCase();
+    document.getElementById("atmLabel").innerHTML =
+        (mode === "atm") ? "ATM" : "FULL";
+
     document.getElementById("tow").innerHTML = "TOW " + w;
 
-    /* SIMPLE FLEX TEMP MODEL */
-    var sel = Math.round(60 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
-    sel = Math.max(30, Math.min(65, sel));
+    /* FIXED SEL TEMP */
+    var sel = Math.round(35 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
+    sel = Math.max(25, Math.min(60, sel));
 
     document.getElementById("selTemp").innerHTML =
         (mode==="atm") ? ("SEL " + sel + "°C") : "FULL";
@@ -323,14 +344,10 @@ function calcTakeoff(){
 }
 
 function calcLanding(){
-
     var w = num(document.getElementById("lw").value);
-    var t = num(document.getElementById("lt").value);
-    var windv = wind(document.getElementById("lwind").value);
+    var vref = 130 + (w - 60000) * 0.00055;
 
-    var vref = 130 + (w - 60000) * 0.00055 + windv * 0.15;
-
-    document.getElementById("modeDisplay").innerHTML = "LDG";
+    document.getElementById("atmLabel").innerHTML = "LDG";
     document.getElementById("tow").innerHTML = "LDG WT " + w;
     document.getElementById("selTemp").innerHTML = "";
 
