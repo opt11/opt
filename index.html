@@ -92,8 +92,6 @@ input, select {
 
 .vsmall .vbig { font-size:28px; }
 .vbigblock .vbig { font-size:56px; font-weight:900; }
-
-.hidden { display:none; }
 </style>
 </head>
 
@@ -151,7 +149,7 @@ input, select {
 <input id="wind" value="0">
 </div>
 <div class="half">
-<span class="label">SLOPE</span>
+<span class="label">SLOPE %</span>
 <input id="slope" value="0">
 </div>
 </div>
@@ -279,11 +277,9 @@ function calc(){
 
     document.getElementById("flapOut").innerHTML = flap;
 
-    /* ================= FLEX FIX ================= */
+    /* ================= FLEX ================= */
 
-    var flex = oat + 28;
-
-    if(!isFinite(flex)) flex = oat + 28;
+    var flex = oat + 8;
 
     flex -= (w - 50000) / 2000 * 2;
     flex += (len - 6500) / 500 * 2;
@@ -295,18 +291,18 @@ function calc(){
     if(isFinite(slope)) flex -= slope * 5;
 
     if(mode === "max") flex -= 18;
-    if(mode === "full") flex += 10;
+    if(mode === "full") flex = oat;   // 🚨 FLEX FAILED IN FULL MODE
 
     if(document.getElementById("anti").value === "on") flex -= 3;
     if(document.getElementById("packs").value === "on") flex -= 2;
 
-    if(flex > 75) flex = 75;
+    if(flex > oat + 45) flex = oat + 45;
     if(flex < oat + 5) flex = oat + 5;
 
     document.getElementById("sel").innerHTML =
         "SEL " + Math.round(flex) + "°C";
 
-    /* ================= SPEEDS (FIXED +5 KT) ================= */
+    /* ================= SPEEDS (+5 FIX INCLUDED) ================= */
 
     var base = 110 + (w / 4000);
 
@@ -323,7 +319,6 @@ function calc(){
     if(rtg === "1"){ v1 -= 2; vr -= 2; v2 -= 2; }
     if(rtg === "2"){ v1 -= 4; vr -= 4; v2 -= 4; }
 
-    /* V1 protection */
     if(len < 6000 && w > 55000){
         v1 = vr - 5;
     }
@@ -336,12 +331,12 @@ function calc(){
     document.getElementById("accel").innerHTML =
         1500 + (len < 7000 ? 400 : 0);
 
-    /* TRIM FIX (-0.5 corrected) */
     document.getElementById("trim").innerHTML =
         (6.2 - (cg * 0.085)).toFixed(1);
 
+    /* TOWG FIX */
     document.getElementById("tow").innerHTML =
-        "TOW " + Math.round(w * 0.98) + " kg";
+        "TOWG " + Math.round(w * 0.98) + " kg";
 
     document.getElementById("modeLabel").innerHTML =
         (mode === "full") ? "FULL" : "ATM";
