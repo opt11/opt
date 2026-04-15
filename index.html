@@ -38,7 +38,6 @@ input, select {
     text-align:right;
 }
 
-/* BUTTON ROW */
 .buttonRow {
     display:flex;
     justify-content:space-between;
@@ -52,21 +51,13 @@ input, select {
     color:#fff;
 }
 
-/* smaller calculate */
-.calcBtn {
-    width:65%;
-}
+.calcBtn { width:65%; }
+.modeBtn { width:30%; }
 
-/* mode toggle */
-.modeBtn {
-    width:30%;
-}
-
-/* DISPLAY */
 .bottom {
     margin:12px;
     background:#000;
-    height:280px;
+    height:300px;
     padding:20px;
     display:flex;
     flex-direction:column;
@@ -101,6 +92,8 @@ input, select {
 
 .vsmall .vbig { font-size:28px; }
 .vbigblock .vbig { font-size:56px; font-weight:900; }
+
+.hidden { display:none; }
 </style>
 </head>
 
@@ -108,7 +101,8 @@ input, select {
 
 <div class="topbar">PERFORMANCE</div>
 
-<!-- INPUTS (UNCHANGED) -->
+<!-- TOGGLE INPUT AREA -->
+<div id="takeoffInputs">
 
 <div class="row">
 <div class="half"><span class="label">WEIGHT</span><input id="tw" value="51600kg"></div>
@@ -181,14 +175,15 @@ input, select {
 <div class="half"></div>
 </div>
 
-<!-- NEW BUTTON ROW -->
+</div>
+
+<!-- BUTTONS -->
 <div class="buttonRow">
 <button class="button calcBtn" onclick="calc()">CALCULATE</button>
 <button class="button modeBtn" onclick="toggleMode()" id="phaseBtn">TKOF</button>
 </div>
 
 <!-- DISPLAY -->
-
 <div class="bottom">
 
 <div class="atm-inline" id="modeLabel">ATM</div>
@@ -237,23 +232,40 @@ input, select {
 <script>
 
 function num(v){
-    return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
+    v = (v+"").toLowerCase();
+
+    let value = parseFloat(v.replace(/[^0-9.\-]/g,"")) || 0;
+
+    // unit handling
+    if(v.includes("lb")) value = value / 2.20462;
+    if(v.includes("m") && !v.includes("ft")) value = value * 3.28084;
+    if(v.includes("f")) value = value; // ft default
+    if(v.includes("c")) value = value; // keep C baseline
+
+    return value;
 }
 
-/* PHASE TOGGLE */
+/* MODE */
 function toggleMode(){
     var btn = document.getElementById("phaseBtn");
-    btn.innerHTML = (btn.innerHTML === "TKOF") ? "LDG" : "TKOF";
+
+    if(btn.innerHTML === "TKOF"){
+        btn.innerHTML = "LDG";
+        document.getElementById("takeoffInputs").classList.add("hidden");
+    } else {
+        btn.innerHTML = "TKOF";
+        document.getElementById("takeoffInputs").classList.remove("hidden");
+    }
 }
 
 function calc(){
 
-var w = num(document.getElementById("tw").value);
-var cgVal = num(document.getElementById("cg").value);
-var len = num(document.getElementById("rwylength").value);
-var oat = num(document.getElementById("tt").value);
+let w = num(document.getElementById("tw").value);
+let cgVal = num(document.getElementById("cg").value);
+let len = num(document.getElementById("rwylength").value);
+let oat = num(document.getElementById("tt").value);
 
-var flapSel = document.getElementById("flap").value;
+let flapSel = document.getElementById("flap").value;
 
 /* OPT FLAP */
 if(flapSel==="opt"){
@@ -264,57 +276,81 @@ if(flapSel==="opt"){
 
 document.getElementById("flapOut").innerHTML = flapSel;
 
-/* TOWG */
-var towg = w - 200;
-document.getElementById("tow").innerHTML = "TOWG " + Math.round(towg) + " kg";
+/* TOW */
+let towg = w * 0.98;
+document.getElementById("tow").innerHTML = "TOW " + Math.round(towg) + " kg";
 
-/* FLEX with ATM MODE EFFECT */
-var selTemp = 55 - (w / 4000) - (len / 2000);
+/* ATM FLEX FIXED */
+let mode = document.getElementById("atmMode").value;
 
-var mode = document.getElementById("atmMode").value;
+let selTemp = oat + 8; // base
 
-if(mode === "max"){
-    selTemp = oat + 5; // basically no flex
-}
-if(mode === "full"){
-    selTemp += 10; // deeper derate
-}
+if(mode === "max") selTemp -= 6;
+if(mode === "opt") selTemp += 2;
+if(mode === "full") selTemp += 8;
 
+/* conditions */
 if(document.getElementById("anti").value==="on") selTemp -= 2;
 if(document.getElementById("packs").value==="on") selTemp -= 1;
 
-if(selTemp < oat + 5) selTemp = oat + 5;
+/* clamp */
+if(selTemp < oat) selTemp = oat;
 
 document.getElementById("sel").innerHTML = "SEL " + Math.round(selTemp) + "°C";
 
-/* ACCEL */
-var accelHt = 1500;
-if(len < 7000) accelHt += 500;
-document.getElementById("accel").innerHTML = accelHt;
+/* RTG EFFECT (FIXED) */
+let rtg = document.getElementById("rtg").value;
+let accel = 1500;
+
+if(len < 7000) accel += 500;
+
+if(rtg==="1") accel -= 120;
+if(rtg==="2") accel -= 200;
+
+document.getElementById("accel").innerHTML = accel;
 
 /* TRIM */
-var trimVal = 7.2 - (cgVal * 0.12);
+let trimVal = 7.2 - (cgVal * 0.1);
 document.getElementById("trim").innerHTML = trimVal.toFixed(1);
 
 /* SPEEDS */
-var base = 110 + (w / 3000);
+let base = 110 + (w / 3500);
 
-var v1v = base;
-var vrv = base + 1;
-var v2v = base + 10;
+let v1 = base;
+let vr = base + 2;
+let v2 = base + 12;
 
-if(flapSel==="1"){ v1v+=5; vrv+=5; v2v+=5; }
-if(flapSel==="5"){ v1v-=3; vrv-=3; v2v-=3; }
-if(flapSel==="15"){ v1v-=7; vrv-=7; v2v-=7; }
+if(rtg==="1"){ v1 -= 2; vr -= 2; v2 -= 2; }
+if(rtg==="2"){ v1 -= 4; vr -= 4; v2 -= 4; }
 
 if(len < 7000){
-    v1v -= 4;
-    vrv -= 3;
+    v1 -= 3;
+    vr -= 2;
 }
 
-document.getElementById("v1").innerHTML = Math.round(v1v);
-document.getElementById("vr").innerHTML = Math.round(vrv);
-document.getElementById("v2").innerHTML = Math.round(v2v);
+/* LANDING MODE */
+if(document.getElementById("phaseBtn").innerHTML === "LDG"){
+    document.getElementById("tow").innerHTML = "LW " + Math.round(w) + " kg";
+
+    document.getElementById("sel").innerHTML = "VREF " + Math.round(110 + (w/4000));
+
+    document.getElementById("v1").innerHTML = "---";
+    document.getElementById("vr").innerHTML = "---";
+    document.getElementById("v2").innerHTML = "---";
+
+    document.getElementById("accel").innerHTML = "VAPP " + Math.round(115 + (w/3800));
+
+    document.getElementById("trim").innerHTML = "---";
+
+    document.getElementById("flapOut").innerHTML = "30";
+
+    return;
+}
+
+/* TAKEOFF OUTPUT */
+document.getElementById("v1").innerHTML = Math.round(v1);
+document.getElementById("vr").innerHTML = Math.round(vr);
+document.getElementById("v2").innerHTML = Math.round(v2);
 
 /* WATERMARK */
 document.getElementById("modeLabel").innerHTML =
