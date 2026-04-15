@@ -90,11 +90,9 @@ input, select {
 
 .vcell { text-align:center; flex:1; }
 
-.vbig { font-size:44px; font-weight:900; }
-
-.smallText {
-    font-size:12px;
-    color:#7f8a99;
+.vbig {
+    font-size:44px;
+    font-weight:900;
 }
 </style>
 </head>
@@ -105,7 +103,7 @@ input, select {
 
 <div id="tkofPage">
 
-<!-- TAKEOFF INPUTS (unchanged) -->
+<!-- RESTORED TAKEOFF INPUTS -->
 <div class="row">
 <div class="half"><span class="label">WEIGHT</span><input id="tw" value="51600kg"></div>
 <div class="half"><span class="label">CG</span><input id="cg" value="22.4"></div>
@@ -113,7 +111,20 @@ input, select {
 
 <div class="row">
 <div class="half"><span class="label">OAT</span><input id="tt" value="11C"></div>
+<div class="half"><span class="label">PRESS</span><input id="tpress" value="1015hPa"></div>
+</div>
+
+<div class="row">
 <div class="half"><span class="label">RWY LEN</span><input id="rwylength" value="6500ft"></div>
+<div class="half">
+<span class="label">FLAPS</span>
+<select id="flap">
+<option value="opt">OPT</option>
+<option value="1">1</option>
+<option value="5">5</option>
+<option value="15">15</option>
+</select>
+</div>
 </div>
 
 <div class="row">
@@ -146,6 +157,35 @@ input, select {
 </div>
 </div>
 
+<div class="row">
+<div class="half">
+<span class="label">ANTI ICE</span>
+<select id="anti">
+<option value="off">OFF</option>
+<option value="on">ON</option>
+</select>
+</div>
+<div class="half">
+<span class="label">PACS</span>
+<select id="packs">
+<option value="on">ON</option>
+<option value="off">OFF</option>
+</select>
+</div>
+</div>
+
+<div class="row">
+<div class="half">
+<span class="label">RTG</span>
+<select id="rtg">
+<option value="0">OFF</option>
+<option value="1">RTG1</option>
+<option value="2">RTG2</option>
+</select>
+</div>
+<div class="half"></div>
+</div>
+
 </div>
 
 <!-- LANDING INPUTS -->
@@ -155,7 +195,7 @@ input, select {
 <div class="half"><span class="label">LAND WT</span><input id="ldgw" value="48000kg"></div>
 <div class="half">
 <span class="label">FLAPS</span>
-<select id="ldgFlap" onchange="calc()">
+<select id="ldgFlap">
 <option value="opt">OPT</option>
 <option value="15">15</option>
 <option value="30">30</option>
@@ -167,18 +207,18 @@ input, select {
 <div class="row">
 <div class="half">
 <span class="label">WIND</span>
-<input id="ldgWind" value="0" oninput="calc()">
+<input id="ldgWind" value="0">
 </div>
 <div class="half">
 <span class="label">SLOPE %</span>
-<input id="ldgSlope" value="0" oninput="calc()">
+<input id="ldgSlope" value="0">
 </div>
 </div>
 
 <div class="row">
 <div class="half">
 <span class="label">COND</span>
-<select id="ldgCond" onchange="calc()">
+<select id="ldgCond">
 <option value="dry">DRY</option>
 <option value="wet">WET</option>
 <option value="cont">CONT</option>
@@ -186,8 +226,6 @@ input, select {
 </div>
 <div class="half"></div>
 </div>
-
-<div class="smallText" id="flapSuggest">FLAP: -- | AUTOBRAKE: --</div>
 
 </div>
 
@@ -198,7 +236,7 @@ input, select {
 
 <div class="bottom">
 
-<div class="atm-inline" id="modeLabel">ATM</div>
+<div class="atm-inline" id="modeLabel"></div>
 
 <div class="topline">
 <div class="tow" id="tow">---</div>
@@ -207,19 +245,24 @@ input, select {
 
 <div class="vstrip">
 
-<div>
-<div class="smallText">FLAP</div>
+<div class="vcell">
+<div>FLAP</div>
 <div class="vbig" id="v1">--</div>
 </div>
 
-<div>
-<div class="smallText">VREF / VAPP</div>
+<div class="vcell">
+<div>V1 / VREF</div>
 <div class="vbig" id="vr">--</div>
 </div>
 
-<div>
-<div class="smallText">LDG DIST</div>
+<div class="vcell">
+<div>V2 / LDG</div>
 <div class="vbig" id="v2">--</div>
+</div>
+
+<div class="vcell">
+<div>ABRK</div>
+<div class="vbig" id="ab">--</div>
 </div>
 
 </div>
@@ -251,53 +294,90 @@ function calc(){
 
 var phase = document.getElementById("phaseBtn").innerHTML;
 
+/* ================= TAKEOFF ================= */
+if(phase === "TKOF"){
+
+var w = num(document.getElementById("tw").value);
+var len = num(document.getElementById("rwylength").value);
+var oat = num(document.getElementById("tt").value);
+
+var wind = num(document.getElementById("wind").value);
+var slope = num(document.getElementById("slope").value);
+
+var cond = document.getElementById("cond").value;
+
+var flap = document.getElementById("flap").value;
+if(flap === "opt"){
+    if(len < 6000) flap = "15";
+    else if(len < 8000) flap = "5";
+    else flap = "1";
+}
+
+var base = 110 + (w / 4000);
+
+var v1 = base;
+var vr = base + 3;
+var v2 = base + 12;
+
+if(cond === "wet"){ v1 += 2; vr += 2; v2 += 3; }
+if(cond === "cont"){ v1 += 4; vr += 4; v2 += 5; }
+
+if(document.getElementById("rtg").value === "1"){ v1 -= 2; vr -= 2; v2 -= 2; }
+if(document.getElementById("rtg").value === "2"){ v1 -= 4; vr -= 4; v2 -= 4; }
+
+document.getElementById("v1").innerHTML = Math.round(v1);
+document.getElementById("vr").innerHTML = Math.round(vr);
+document.getElementById("v2").innerHTML = Math.round(v2);
+
+document.getElementById("sel").innerHTML = "SEL " + Math.round(oat + 28);
+document.getElementById("tow").innerHTML = "TOWG " + Math.round(w - 250);
+
+document.getElementById("ab").innerHTML = "";
+document.getElementById("modeLabel").innerHTML = "ATM";
+
+}
+
 /* ================= LANDING ================= */
 if(phase === "LDG"){
 
-    var w = num(document.getElementById("ldgw").value);
-    var wind = num(document.getElementById("ldgWind").value);
-    var slope = num(document.getElementById("ldgSlope").value);
-    var cond = document.getElementById("ldgCond").value;
+var w = num(document.getElementById("ldgw").value);
+var wind = num(document.getElementById("ldgWind").value);
+var slope = num(document.getElementById("ldgSlope").value);
+var cond = document.getElementById("ldgCond").value;
 
-    var flapSel = document.getElementById("ldgFlap").value;
+var flap = document.getElementById("ldgFlap").value;
+if(flap === "opt"){
+    flap = (w > 60000) ? 40 : (w > 52000 ? 30 : 15);
+}
 
-    /* OPT FLAP SUGGESTION */
-    var flapSuggest;
-    if(flapSel === "opt"){
-        if(w > 60000) flapSuggest = 40;
-        else if(w > 52000) flapSuggest = 30;
-        else flapSuggest = 15;
-        flapSel = flapSuggest;
-    }
+var vref = 105 + (w / 6000) + (flap * 0.35);
+var vapp = vref + wind * 0.2;
 
-    document.getElementById("flapSuggest").innerHTML =
-        "FLAP: " + flapSel + " | AUTOBRAKE: " +
-        (cond==="dry" ? (flapSel<=30 ? "1-2" : "2") :
-         cond==="wet" ? (flapSel<=30 ? "2-3" : "3") : "MAX");
+var dist = 1200 + (w / 45);
 
-    var vref = 105 + (w / 6000) + (flapSel * 0.35);
-    var vapp = vref + wind * 0.2;
+if(cond === "wet") dist *= 1.25;
+if(cond === "cont") dist *= 1.55;
 
-    var dist = 1200 + (w / 45);
+dist -= wind * 18;
+dist += slope * 250;
 
-    if(cond === "wet") dist *= 1.25;
-    if(cond === "cont") dist *= 1.55;
+if(dist < 600) dist = 600;
 
-    dist -= wind * 18;
-    dist += slope * 250;
+/* AUTOBRAKE */
+var ab =
+    (dist < 900) ? "1" :
+    (dist < 1200) ? "2" :
+    (dist < 1600) ? "3" : "MAX";
 
-    if(dist < 600) dist = 600;
+document.getElementById("v1").innerHTML = "FL " + flap;
+document.getElementById("vr").innerHTML = Math.round(vref) + "/" + Math.round(vapp);
+document.getElementById("v2").innerHTML = Math.round(dist) + "m";
+document.getElementById("ab").innerHTML = ab;
 
-    document.getElementById("v1").innerHTML = "FL " + flapSel;
-    document.getElementById("vr").innerHTML = Math.round(vref) + " / " + Math.round(vapp);
-    document.getElementById("v2").innerHTML = Math.round(dist) + "m";
+document.getElementById("sel").innerHTML = "VREF " + Math.round(vref);
+document.getElementById("tow").innerHTML = "LW " + Math.round(w);
 
-    document.getElementById("sel").innerHTML = "VREF " + Math.round(vref);
-    document.getElementById("tow").innerHTML = "LW " + Math.round(w);
-
-    document.getElementById("modeLabel").innerHTML = "LDG";
-
-    return;
+document.getElementById("modeLabel").innerHTML = "LDG";
 }
 
 }
