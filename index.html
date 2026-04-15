@@ -21,13 +21,11 @@ body {
     color:#9aa4b2;
 }
 
-/* LAYOUT */
 .main {
     display:grid;
     grid-template-columns: 80px 1fr;
 }
 
-/* SIDEBAR */
 .sidebar {
     background:#0e131a;
 }
@@ -46,12 +44,10 @@ body {
     color:#fff;
 }
 
-/* CONTENT */
 .content {
     padding:12px;
 }
 
-/* INPUT ROWS */
 .row {
     display:flex;
     justify-content:space-between;
@@ -75,28 +71,28 @@ input, select {
 
 /* BUTTON */
 .button {
-    margin-top:10px;
-    float:right;
+    margin-top:15px;
+    width:100%;
     background:#1f2633;
     border:1px solid #2f394a;
-    padding:6px 14px;
-    font-size:12px;
+    padding:10px;
+    font-size:13px;
     color:#fff;
 }
 
-/* 🔥 OPT DISPLAY */
+/* DISPLAY */
 .bottom {
-    margin-top:20px;
+    margin-top:15px;
     background:#000;
     height:260px;
+    position:relative;
+    padding:20px;
     display:flex;
     flex-direction:column;
-    justify-content:center;
-    padding:20px;
-    position:relative;
+    justify-content:space-between;
 }
 
-/* HUGE WATERMARK */
+/* WATERMARK */
 .atm-inline {
     position:absolute;
     top:50%;
@@ -106,25 +102,20 @@ input, select {
     font-weight:900;
     opacity:0.05;
     letter-spacing:18px;
-    pointer-events:none;
 }
 
-/* TOP LINE */
+/* TOP ROW */
 .topline {
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    margin-bottom:25px;
     z-index:2;
 }
 
-/* BIG TOW */
 .tow {
-    font-size:36px;
+    font-size:38px;
     font-weight:900;
 }
 
-/* SEL TEMP */
 .sel {
     font-size:26px;
     font-weight:700;
@@ -133,25 +124,40 @@ input, select {
 /* SPEED STRIP */
 .vstrip {
     display:flex;
-    justify-content:space-around;
+    justify-content:space-between;
     align-items:flex-end;
     z-index:2;
 }
 
-/* SPEED CELLS */
-.vcell {
+.vsmall {
     text-align:center;
 }
 
-.vlabel {
-    font-size:12px;
-    color:#777;
-    margin-bottom:6px;
+.vsmall .vlabel {
+    font-size:11px;
+    color:#666;
 }
 
-.vbig {
-    font-size:52px;
+.vsmall .vbig {
+    font-size:20px;
+}
+
+.vbigblock {
+    text-align:center;
+}
+
+.vbigblock .vlabel {
+    font-size:12px;
+    color:#888;
+}
+
+.vbigblock .vbig {
+    font-size:56px;
     font-weight:900;
+}
+
+.spacer {
+    flex:0.5;
 }
 
 </style>
@@ -165,12 +171,10 @@ input, select {
 
 <div class="sidebar">
     <div class="tab active" onclick="showPanel('tko', this)">TKO</div>
-    <div class="tab" onclick="showPanel('ldg', this)">LDG</div>
 </div>
 
 <div class="content">
 
-<!-- TAKEOFF -->
 <div id="tkoPanel">
 
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
@@ -189,9 +193,8 @@ input, select {
 </select>
 </div>
 
-<button class="button" onclick="calcTakeoff()">CALC</button>
+<button class="button" onclick="calcTakeoff()">CALCULATE</button>
 
-<!-- 🔥 DISPLAY DIRECTLY BELOW BUTTON -->
 <div class="bottom">
 
 <div class="atm-inline" id="atmLabel">ATM</div>
@@ -203,27 +206,29 @@ input, select {
 
 <div class="vstrip">
 
-<div class="vcell">
+<div class="vsmall">
 <div class="vlabel">FLAP</div>
 <div class="vbig">5</div>
 </div>
 
-<div class="vcell">
+<div class="vsmall">
 <div class="vlabel">ACCEL HT</div>
 <div class="vbig">1500</div>
 </div>
 
-<div class="vcell">
+<div class="spacer"></div>
+
+<div class="vbigblock">
 <div class="vlabel">V1</div>
 <div class="vbig" id="v1b">---</div>
 </div>
 
-<div class="vcell">
+<div class="vbigblock">
 <div class="vlabel">VR</div>
 <div class="vbig" id="vrb">---</div>
 </div>
 
-<div class="vcell">
+<div class="vbigblock">
 <div class="vlabel">V2</div>
 <div class="vbig" id="v2b">---</div>
 </div>
@@ -234,40 +239,11 @@ input, select {
 
 </div>
 
-<!-- LANDING -->
-<div id="ldgPanel" style="display:none">
-
-<div class="row"><span class="label">LDG WT</span><input id="lw" value="60000kg"></div>
-<div class="row"><span class="label">OAT</span><input id="lt" value="15C"></div>
-<div class="row"><span class="label">WIND</span><input id="lwind" value="0"></div>
-
-<div class="row">
-<span class="label">SURFACE</span>
-<select id="lsurf">
-<option value="dry">Dry</option>
-<option value="wet">Wet</option>
-<option value="contaminated">Contaminated</option>
-</select>
-</div>
-
-<button class="button" onclick="calcLanding()">CALC</button>
-
-</div>
-
 </div>
 
 </div>
 
 <script>
-
-function showPanel(type, el){
-    document.getElementById("tkoPanel").style.display = (type==="tko") ? "block" : "none";
-    document.getElementById("ldgPanel").style.display = (type==="ldg") ? "block" : "none";
-
-    var tabs = document.getElementsByClassName("tab");
-    for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
-    el.classList.add("active");
-}
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
@@ -296,14 +272,12 @@ function calcTakeoff(){
     var rwyhdg = num(document.getElementById("rwyhdg").value);
     var rwylength = runwayLength(document.getElementById("rwylength").value);
 
-    document.getElementById("atmLabel").innerHTML =
-        (mode === "atm") ? "ATM" : "FULL";
-
+    document.getElementById("atmLabel").innerHTML = (mode === "atm") ? "ATM" : "FULL";
     document.getElementById("tow").innerHTML = "TOW " + w;
 
-    /* FIXED SEL TEMP */
-    var sel = Math.round(35 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
-    sel = Math.max(25, Math.min(60, sel));
+    /* ✅ FIXED SEL TEMP (-20°C bias) */
+    var sel = Math.round(15 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
+    sel = Math.max(20, Math.min(55, sel));
 
     document.getElementById("selTemp").innerHTML =
         (mode==="atm") ? ("SEL " + sel + "°C") : "FULL";
@@ -341,19 +315,6 @@ function calcTakeoff(){
     document.getElementById("v1b").innerHTML = v1;
     document.getElementById("vrb").innerHTML = vr;
     document.getElementById("v2b").innerHTML = v2;
-}
-
-function calcLanding(){
-    var w = num(document.getElementById("lw").value);
-    var vref = 130 + (w - 60000) * 0.00055;
-
-    document.getElementById("atmLabel").innerHTML = "LDG";
-    document.getElementById("tow").innerHTML = "LDG WT " + w;
-    document.getElementById("selTemp").innerHTML = "";
-
-    document.getElementById("v1b").innerHTML = "-";
-    document.getElementById("vrb").innerHTML = "-";
-    document.getElementById("v2b").innerHTML = Math.round(vref);
 }
 
 </script>
