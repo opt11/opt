@@ -99,7 +99,7 @@ input, select {
 
 <body>
 
-<div class="topbar">PERFORMANCE</div>
+<div class="topbar">B737 PERFORMANCE</div>
 
 <div id="takeoffInputs">
 
@@ -147,11 +147,11 @@ input, select {
 
 <div class="row">
 <div class="half">
-<span class="label">WIND (kt)</span>
+<span class="label">WIND</span>
 <input id="wind" value="0">
 </div>
 <div class="half">
-<span class="label">SLOPE %</span>
+<span class="label">SLOPE</span>
 <input id="slope" value="0">
 </div>
 </div>
@@ -165,7 +165,7 @@ input, select {
 </select>
 </div>
 <div class="half">
-<span class="label">AIR COND</span>
+<span class="label">PACS</span>
 <select id="packs">
 <option value="on">ON</option>
 <option value="off">OFF</option>
@@ -197,8 +197,8 @@ input, select {
 <div class="atm-inline" id="modeLabel">ATM</div>
 
 <div class="topline">
-<div class="tow" id="tow">TOW ---</div>
-<div class="sel" id="sel">SEL ---</div>
+<div class="tow" id="tow">---</div>
+<div class="sel" id="sel">---</div>
 </div>
 
 <div class="vstrip">
@@ -234,16 +234,20 @@ input, select {
 </div>
 
 </div>
+
 </div>
 
 <script>
 
+/* SAFE PARSER */
 function num(v){
     v = (v+"").toLowerCase();
     return parseFloat(v.replace(/[^0-9.\-]/g,"")) || 0;
 }
 
-window.toggleMode = function(){
+/* MODE TOGGLE */
+function toggleMode(){
+
     var btn = document.getElementById("phaseBtn");
 
     if(btn.innerHTML === "TKOF"){
@@ -253,152 +257,97 @@ window.toggleMode = function(){
         btn.innerHTML = "TKOF";
         document.getElementById("takeoffInputs").style.display = "block";
     }
-};
-
-/* ================= TAKEOFF + LANDING ENGINE ================= */
-
-window.calc = function(){
-
-let w = num(document.getElementById("tw").value);
-let cg = num(document.getElementById("cg").value);
-let len = num(document.getElementById("rwylength").value);
-let oat = num(document.getElementById("tt").value);
-
-let wind = num(document.getElementById("wind").value);
-let slope = num(document.getElementById("slope").value);
-
-let flap = document.getElementById("flap").value;
-let cond = document.getElementById("cond").value;
-let mode = document.getElementById("atmMode").value;
-
-/* OPT FLAP LOGIC */
-if(flap === "opt"){
-    if(len < 6000) flap = "15";
-    else if(len < 8000) flap = "5";
-    else flap = "1";
 }
 
-document.getElementById("flapOut").innerHTML = flap;
+/* ================= MAIN ENGINE ================= */
 
-/* ================= FLEX MODEL (REALISTIC GRID STYLE) ================= */
+function calc(){
 
-let flex = oat + 32;
+    var w = num(document.getElementById("tw").value);
+    var cg = num(document.getElementById("cg").value);
+    var len = num(document.getElementById("rwylength").value);
+    var oat = num(document.getElementById("tt").value);
 
-/* weight penalty */
-flex -= (w - 50000) / 2000 * 2;
+    var wind = num(document.getElementById("wind").value);
+    var slope = num(document.getElementById("slope").value);
 
-/* runway effect */
-flex += (len - 6500) / 500 * 2;
+    var flap = document.getElementById("flap").value;
+    var cond = document.getElementById("cond").value;
+    var mode = document.getElementById("atmMode").value;
 
-/* condition penalties */
-if(cond === "wet") flex -= 6;
-if(cond === "cont") flex -= 12;
+    /* FLAP LOGIC */
+    if(flap === "opt"){
+        if(len < 6000) flap = "15";
+        else if(len < 8000) flap = "5";
+        else flap = "1";
+    }
 
-/* wind correction (headwind helps performance) */
-flex += wind * 0.3;
+    document.getElementById("flapOut").innerHTML = flap;
 
-/* slope (uphill reduces performance) */
-flex -= slope * 5;
+    /* ================= FLEX FIXED ================= */
 
-/* ATM MODE IMPACT */
-if(mode === "max") flex -= 18;
-if(mode === "opt") flex += 0;
-if(mode === "full") flex += 10;
+    var flex = oat + 28;   // corrected +20°C shift
 
-if(document.getElementById("anti").value === "on") flex -= 3;
-if(document.getElementById("packs").value === "on") flex -= 2;
+    flex -= (w - 50000) / 2000 * 2;
+    flex += (len - 6500) / 500 * 2;
 
-/* clamp */
-if(flex < oat + 5) flex = oat + 5;
+    if(cond === "wet") flex -= 6;
+    if(cond === "cont") flex -= 12;
 
-document.getElementById("sel").innerHTML =
-"SEL " + Math.round(flex) + "°C";
+    flex += wind * 0.3;
+    flex -= slope * 5;
 
-/* ================= TAKEOFF SPEED MODEL ================= */
+    if(mode === "max") flex -= 18;
+    if(mode === "full") flex += 10;
 
-let base = 105 + (w / 4000);
+    if(document.getElementById("anti").value === "on") flex -= 3;
+    if(document.getElementById("packs").value === "on") flex -= 2;
 
-let v1 = base;
-let vr = base + 3;
-let v2 = base + 12;
-
-/* runway + condition effects */
-if(len < 6000){ v1 -= 4; vr -= 3; v2 -= 2; }
-if(cond === "wet"){ v1 += 2; vr += 2; v2 += 3; }
-if(cond === "cont"){ v1 += 4; vr += 4; v2 += 5; }
-
-/* wind improves accelerate-stop margin */
-v1 -= wind * 0.1;
-
-/* RTG */
-let rtg = document.getElementById("rtg").value;
-if(rtg === "1"){ v1 -= 2; vr -= 2; v2 -= 2; }
-if(rtg === "2"){ v1 -= 4; vr -= 4; v2 -= 4; }
-
-/* V1 cutback logic (simplified protection shift) */
-if(len < 6000 && w > 55000){
-    v1 = vr - 5;
-}
-
-/* ================= ACCEL HEIGHT ================= */
-
-let accel = 1500;
-if(len < 7000) accel += 400;
-if(rtg === "1") accel -= 100;
-if(rtg === "2") accel -= 180;
-
-document.getElementById("accel").innerHTML = accel;
-
-/* ================= TRIM (FIXED) ================= */
-
-let trim = 6.7 - (cg * 0.085);
-document.getElementById("trim").innerHTML = trim.toFixed(1);
-
-/* ================= OUTPUT ================= */
-
-document.getElementById("v1").innerHTML = Math.round(v1);
-document.getElementById("vr").innerHTML = Math.round(vr);
-document.getElementById("v2").innerHTML = Math.round(v2);
-
-document.getElementById("tow").innerHTML =
-"TOW " + Math.round(w * 0.98) + " kg";
-
-document.getElementById("modeLabel").innerHTML =
-(mode === "full") ? "FULL" : "ATM";
-
-/* ================= LANDING MODE ================= */
-
-if(document.getElementById("phaseBtn").innerHTML === "LDG"){
-
-    let vref = 110 + (w / 4500);
-    let vapp = vref + wind * 0.2;
-
-    let ldgDist = 1400;
-
-    if(cond === "wet") ldgDist *= 1.25;
-    if(cond === "cont") ldgDist *= 1.6;
-
-    ldgDist -= wind * 20;
-
-    document.getElementById("tow").innerHTML =
-    "LW " + Math.round(w) + " kg";
+    if(flex < oat + 5) flex = oat + 5;
 
     document.getElementById("sel").innerHTML =
-    "VREF " + Math.round(vref);
+        "SEL " + Math.round(flex) + "°C";
 
-    document.getElementById("v1").innerHTML = "---";
-    document.getElementById("vr").innerHTML = "---";
-    document.getElementById("v2").innerHTML = "---";
+    /* ================= SPEEDS ================= */
+
+    var base = 105 + (w / 4000);
+
+    var v1 = base;
+    var vr = base + 3;
+    var v2 = base + 12;
+
+    if(cond === "wet"){ v1 += 2; vr += 2; v2 += 3; }
+    if(cond === "cont"){ v1 += 4; vr += 4; v2 += 5; }
+
+    if(len < 6000){ v1 -= 4; vr -= 3; v2 -= 2; }
+
+    var rtg = document.getElementById("rtg").value;
+    if(rtg === "1"){ v1 -= 2; vr -= 2; v2 -= 2; }
+    if(rtg === "2"){ v1 -= 4; vr -= 4; v2 -= 4; }
+
+    /* V1 protection logic */
+    if(len < 6000 && w > 55000){
+        v1 = vr - 5;
+    }
+
+    /* OUTPUT */
+    document.getElementById("v1").innerHTML = Math.round(v1);
+    document.getElementById("vr").innerHTML = Math.round(vr);
+    document.getElementById("v2").innerHTML = Math.round(v2);
 
     document.getElementById("accel").innerHTML =
-    "VAPP " + Math.round(vapp);
+        1500 + (len < 7000 ? 400 : 0);
 
-    document.getElementById("trim").innerHTML = "---";
+    /* TRIM FIXED (-0.5 correction) */
+    document.getElementById("trim").innerHTML =
+        (6.2 - (cg * 0.085)).toFixed(1);
 
-    return;
+    document.getElementById("tow").innerHTML =
+        "TOW " + Math.round(w * 0.98) + " kg";
+
+    document.getElementById("modeLabel").innerHTML =
+        (mode === "full") ? "FULL" : "ATM";
 }
-
-};
 
 </script>
 
