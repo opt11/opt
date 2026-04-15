@@ -8,100 +8,118 @@
 
 body {
     margin:0;
-    font-family: Arial;
-    background:#1c1f26;
+    font-family: Arial, Helvetica, sans-serif;
+    background:#0e1117;
     color:#fff;
 }
 
 .topbar {
-    background:#2a2f38;
-    padding:12px;
+    background:#1a1f28;
+    padding:10px;
     text-align:center;
-    font-weight:600;
+    font-size:14px;
+    letter-spacing:1px;
+    color:#aaa;
 }
 
 .main {
     display:grid;
     grid-template-columns: 1.2fr 1fr;
-    gap:20px;
-    padding:20px;
+    gap:15px;
+    padding:15px;
 }
 
 .left, .right {
-    background:#222833;
-    padding:18px;
+    background:#161b22;
+    padding:15px;
 }
 
 .row {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    background:#2e3542;
-    padding:12px;
-    margin-bottom:10px;
+    background:#202632;
+    padding:10px;
+    margin-bottom:8px;
 }
 
-.label { color:#ccc; }
+.label { color:#9aa4b2; font-size:13px; }
 
 input, select {
-    background:#1c1f26;
-    border:1px solid #3a4250;
+    background:#0e1117;
+    border:1px solid #2c3440;
     color:#fff;
-    padding:10px;
-    width:170px;
+    padding:8px;
+    width:150px;
     text-align:right;
 }
 
 .button {
     float:right;
-    background:#3a4250;
-    border:1px solid #5a6475;
-    padding:8px 18px;
+    background:#2c3440;
+    border:1px solid #3d4655;
+    padding:6px 14px;
     color:#fff;
+    font-size:12px;
 }
 
 .output {
-    margin-top:15px;
+    margin-top:10px;
     font-family:monospace;
+    color:#ccc;
 }
 
-/* ✅ PROPER HORIZONTAL EFB STRIP */
+/* ✅ REAL OPT STYLE STRIP */
 .bottom {
-    margin-top:15px;
+    margin-top:10px;
     background:#000;
-    padding:18px;
-    display:grid;
-    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 1fr;
+    padding:15px 20px;
+    display:flex;
     align-items:center;
-    text-align:center;
+    justify-content:space-between;
     position:relative;
 }
 
+/* BIG ATM WATERMARK (LEFT) */
 .atm-inline {
-    font-size:140px;
+    position:absolute;
+    left:20px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:120px;
     font-weight:900;
-    opacity:0.18;
-    letter-spacing:8px;
+    opacity:0.12;
+    letter-spacing:10px;
 }
 
-.vlabel {
-    font-size:13px;
-    color:#aaa;
-    margin-bottom:6px;
-    letter-spacing:1px;
+/* SPEED BLOCK (RIGHT SIDE CLUSTERED) */
+.vstrip {
+    margin-left:auto;
+    display:flex;
+    gap:35px;
+    align-items:center;
 }
 
-.vbig {
-    font-size:34px;
-    font-weight:900;
-    color:#fff;
-}
-
+/* EACH VALUE */
 .vcell {
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
+}
+
+/* LABELS */
+.vlabel {
+    font-size:11px;
+    color:#777;
+    margin-bottom:4px;
+    letter-spacing:1px;
+}
+
+/* BIG NUMBERS */
+.vbig {
+    font-size:36px;
+    font-weight:900;
+    color:#fff;
 }
 
 </style>
@@ -168,10 +186,12 @@ input, select {
 
 </div>
 
-<!-- ✅ RESTORED HORIZONTAL EFB STRIP -->
+<!-- ✅ FIXED REALISTIC STRIP -->
 <div class="bottom">
 
 <div class="atm-inline" id="atmLabel">ATM</div>
+
+<div class="vstrip">
 
 <div class="vcell">
     <div class="vlabel">FLAP</div>
@@ -180,7 +200,7 @@ input, select {
 
 <div class="vcell">
     <div class="vlabel">ACCEL HT</div>
-    <div class="vbig">1500 ft</div>
+    <div class="vbig">1500</div>
 </div>
 
 <div class="vcell">
@@ -200,7 +220,11 @@ input, select {
 
 </div>
 
+</div>
+
 <script>
+
+// 🔒 UNCHANGED LOGIC
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
@@ -214,10 +238,7 @@ function wind(v){
 function runwayLength(v){
     v = (v+"").toLowerCase();
     var value = parseFloat(v.replace(/[^0-9.]/g,"")) || 0;
-
-    // iOS SAFE (no includes)
     if(v.indexOf("ft") !== -1) return value * 0.3048;
-
     return value;
 }
 
