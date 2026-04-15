@@ -237,11 +237,20 @@ input, select {
 
 <script>
 
+/* SAFE NUMBER PARSER */
 function num(v){
     v = (v+"").toLowerCase();
     return parseFloat(v.replace(/[^0-9.\-]/g,"")) || 0;
 }
 
+/* WIND PARSER (FIXED) */
+function getWind(){
+    var w = document.getElementById("wind").value.toUpperCase();
+    var m = w.match(/(\d+)\s*KT/);
+    return m ? parseFloat(m[1]) : num(w);
+}
+
+/* MODE TOGGLE */
 function toggleMode(){
     var btn = document.getElementById("phaseBtn");
 
@@ -261,7 +270,7 @@ function calc(){
     var len = num(document.getElementById("rwylength").value);
     var oat = num(document.getElementById("tt").value);
 
-    var wind = num(document.getElementById("wind").value);
+    var wind = getWind();
     var slope = num(document.getElementById("slope").value);
 
     var flap = document.getElementById("flap").value;
@@ -279,22 +288,24 @@ function calc(){
 
     /* ================= FLEX ================= */
 
-    var flex = oat + 8;
+    var flex = oat + 18;
 
-    flex -= (w - 50000) / 2000 * 2;
-    flex += (len - 6500) / 500 * 2;
+    flex -= (w - 52000) / 8000 * 4;
+    flex += (len - 6500) / 1500 * 2;
 
-    if(cond === "wet") flex -= 6;
-    if(cond === "cont") flex -= 12;
+    if(cond === "wet") flex -= 4;
+    if(cond === "cont") flex -= 8;
 
-    if(isFinite(wind)) flex += wind * 0.3;
-    if(isFinite(slope)) flex -= slope * 5;
+    flex += wind * 0.2;
+    flex -= slope * 2;
 
     if(mode === "max") flex -= 18;
-    if(mode === "full") flex = oat;   // 🚨 FLEX FAILED IN FULL MODE
 
-    if(document.getElementById("anti").value === "on") flex -= 3;
-    if(document.getElementById("packs").value === "on") flex -= 2;
+    /* FULL = NO FLEX */
+    if(mode === "full") flex = oat;
+
+    if(document.getElementById("anti").value === "on") flex -= 2;
+    if(document.getElementById("packs").value === "on") flex -= 1;
 
     if(flex > oat + 45) flex = oat + 45;
     if(flex < oat + 5) flex = oat + 5;
@@ -302,7 +313,7 @@ function calc(){
     document.getElementById("sel").innerHTML =
         "SEL " + Math.round(flex) + "°C";
 
-    /* ================= SPEEDS (+5 FIX INCLUDED) ================= */
+    /* ================= SPEEDS ================= */
 
     var base = 110 + (w / 4000);
 
@@ -323,20 +334,21 @@ function calc(){
         v1 = vr - 5;
     }
 
-    /* OUTPUT */
     document.getElementById("v1").innerHTML = Math.round(v1);
     document.getElementById("vr").innerHTML = Math.round(vr);
     document.getElementById("v2").innerHTML = Math.round(v2);
 
+    /* ACCEL */
     document.getElementById("accel").innerHTML =
         1500 + (len < 7000 ? 400 : 0);
 
+    /* TRIM */
     document.getElementById("trim").innerHTML =
         (6.2 - (cg * 0.085)).toFixed(1);
 
-    /* TOWG FIX */
+    /* TOWG (200–300kg burn now realistic) */
     document.getElementById("tow").innerHTML =
-        "TOWG " + Math.round(w * 0.98) + " kg";
+        "TOWG " + Math.round(w - (len / 25)) + " kg";
 
     document.getElementById("modeLabel").innerHTML =
         (mode === "full") ? "FULL" : "ATM";
