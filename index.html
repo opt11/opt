@@ -51,8 +51,7 @@ input, select {
     color:#fff;
 }
 
-.calcBtn { width:65%; }
-.modeBtn { width:30%; }
+.calcBtn { width:100%; }
 
 .bottom {
     margin:12px;
@@ -187,7 +186,6 @@ input, select {
 
 <div class="buttonRow">
 <button class="button calcBtn" onclick="calc()">CALCULATE</button>
-<button class="button modeBtn" onclick="toggleMode()" id="phaseBtn">TKOF</button>
 </div>
 
 <div class="bottom">
@@ -250,19 +248,6 @@ function getWind(){
     return m ? parseFloat(m[1]) : num(w);
 }
 
-/* MODE TOGGLE */
-function toggleMode(){
-    var btn = document.getElementById("phaseBtn");
-
-    if(btn.innerHTML === "TKOF"){
-        btn.innerHTML = "LDG";
-        document.getElementById("takeoffInputs").style.display = "none";
-    } else {
-        btn.innerHTML = "TKOF";
-        document.getElementById("takeoffInputs").style.display = "block";
-    }
-}
-
 function calc(){
 
     var w = num(document.getElementById("tw").value);
@@ -286,9 +271,9 @@ function calc(){
 
     document.getElementById("flapOut").innerHTML = flap;
 
-    /* ================= FLEX ================= */
+    /* FLEX */
 
-    var flex = oat + 18;
+    var flex = oat + 28;
 
     flex -= (w - 52000) / 8000 * 4;
     flex += (len - 6500) / 1500 * 2;
@@ -301,7 +286,6 @@ function calc(){
 
     if(mode === "max") flex -= 18;
 
-    /* FULL = NO FLEX */
     if(mode === "full") flex = oat;
 
     if(document.getElementById("anti").value === "on") flex -= 2;
@@ -313,7 +297,7 @@ function calc(){
     document.getElementById("sel").innerHTML =
         "SEL " + Math.round(flex) + "°C";
 
-    /* ================= SPEEDS ================= */
+    /* SPEEDS */
 
     var base = 110 + (w / 4000);
 
@@ -346,7 +330,7 @@ function calc(){
     document.getElementById("trim").innerHTML =
         (6.2 - (cg * 0.085)).toFixed(1);
 
-    /* TOWG (200–300kg burn now realistic) */
+    /* TOWG */
     document.getElementById("tow").innerHTML =
         "TOWG " + Math.round(w - (len / 25)) + " kg";
 
