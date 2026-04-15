@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>B737 OPT Performance Tool</title>
+<title>B737 OPT</title>
 
 <style>
 
@@ -13,32 +13,26 @@ body {
     color:#fff;
 }
 
-/* TOP */
 .topbar {
     background:#121720;
     padding:8px;
     text-align:center;
     font-size:13px;
     color:#9aa4b2;
-    letter-spacing:1px;
 }
 
-/* MAIN LAYOUT */
+/* LAYOUT */
 .main {
     display:grid;
     grid-template-columns: 80px 1fr;
-    height:calc(100vh - 140px);
 }
 
-/* LEFT MODE BAR */
 .sidebar {
     background:#0e131a;
-    display:flex;
-    flex-direction:column;
 }
 
 .tab {
-    padding:15px 5px;
+    padding:15px;
     text-align:center;
     font-size:12px;
     color:#7f8a99;
@@ -51,13 +45,11 @@ body {
     color:#fff;
 }
 
-/* CONTENT */
 .content {
     padding:12px;
-    background:#10151d;
 }
 
-/* ROW STYLE */
+/* INPUT ROWS */
 .row {
     display:flex;
     justify-content:space-between;
@@ -90,56 +82,53 @@ input, select {
     color:#fff;
 }
 
-.output {
-    margin-top:10px;
-    font-family:monospace;
-    font-size:12px;
-    color:#b8c1cc;
-}
-
-/* BOTTOM OPT STRIP */
+/* 🔥 BIG OPT DISPLAY */
 .bottom {
     background:#000;
-    height:120px;
+    height:220px;
     display:flex;
-    align-items:center;
+    flex-direction:column;
     justify-content:center;
-    position:relative;
+    padding:15px;
 }
 
-/* CENTERED ATM */
-.atm-inline {
-    position:absolute;
-    font-size:140px;
+/* TOP LINE (MODE + TOW + SEL TEMP) */
+.topline {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+    font-size:14px;
+    color:#ccc;
+}
+
+/* CENTER MODE */
+.mode {
+    font-size:32px;
     font-weight:900;
-    opacity:0.08;
-    letter-spacing:10px;
+    color:#fff;
 }
 
-/* EVENLY SPACED SPEEDS */
+/* SPEED STRIP */
 .vstrip {
-    width:100%;
     display:flex;
     justify-content:space-around;
     align-items:flex-end;
-    z-index:2;
 }
 
 /* CELL */
 .vcell {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
+    text-align:center;
 }
 
 .vlabel {
-    font-size:11px;
-    color:#6f7a88;
-    margin-bottom:4px;
+    font-size:12px;
+    color:#777;
+    margin-bottom:5px;
 }
 
 .vbig {
-    font-size:42px;
+    font-size:48px;
     font-weight:900;
 }
 
@@ -152,29 +141,26 @@ input, select {
 
 <div class="main">
 
-<!-- LEFT SELECTOR -->
 <div class="sidebar">
     <div class="tab active" onclick="showPanel('tko', this)">TKO</div>
     <div class="tab" onclick="showPanel('ldg', this)">LDG</div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
 
 <!-- TAKEOFF -->
 <div id="tkoPanel">
 
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
-<div class="row"><span class="label">CG (%MAC)</span><input id="tcg" value="25"></div>
+<div class="row"><span class="label">CG</span><input id="tcg" value="25"></div>
 <div class="row"><span class="label">OAT</span><input id="tt" value="15C"></div>
 <div class="row"><span class="label">WIND</span><input id="twind" value="150/5KT"></div>
 <div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
-
-<div class="row"><span class="label">RUNWAY HDG</span><input id="rwyhdg" value="090"></div>
-<div class="row"><span class="label">RUNWAY LENGTH</span><input id="rwylength" value="3000m"></div>
+<div class="row"><span class="label">RWY HDG</span><input id="rwyhdg" value="090"></div>
+<div class="row"><span class="label">RWY LEN</span><input id="rwylength" value="3000m"></div>
 
 <div class="row">
-<span class="label">THRUST MODE</span>
+<span class="label">MODE</span>
 <select id="mode">
 <option value="atm">ATM</option>
 <option value="full">FULL</option>
@@ -182,7 +168,6 @@ input, select {
 </div>
 
 <button class="button" onclick="calcTakeoff()">CALC</button>
-<div class="output" id="toOut">READY</div>
 
 </div>
 
@@ -203,7 +188,6 @@ input, select {
 </div>
 
 <button class="button" onclick="calcLanding()">CALC</button>
-<div class="output" id="loOut">READY</div>
 
 </div>
 
@@ -211,10 +195,14 @@ input, select {
 
 </div>
 
-<!-- OPT STRIP -->
+<!-- 🔥 MAIN DISPLAY -->
 <div class="bottom">
 
-<div class="atm-inline" id="atmLabel">ATM</div>
+<div class="topline">
+    <div id="tow">TOW ---</div>
+    <div class="mode" id="modeDisplay">---</div>
+    <div id="selTemp">SEL ---</div>
+</div>
 
 <div class="vstrip">
 
@@ -259,7 +247,7 @@ function showPanel(type, el){
     el.classList.add("active");
 }
 
-/* ORIGINAL LOGIC BELOW — UNCHANGED */
+/* SAME LOGIC + DISPLAY ADDITIONS */
 
 function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
@@ -288,8 +276,16 @@ function calcTakeoff(){
     var rwyhdg = num(document.getElementById("rwyhdg").value);
     var rwylength = runwayLength(document.getElementById("rwylength").value);
 
-    document.getElementById("atmLabel").innerHTML =
-        (mode === "atm") ? "ATM" : "FULL";
+    /* DISPLAY */
+    document.getElementById("modeDisplay").innerHTML = mode.toUpperCase();
+    document.getElementById("tow").innerHTML = "TOW " + w;
+
+    /* SIMPLE FLEX TEMP MODEL */
+    var sel = Math.round(60 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
+    sel = Math.max(30, Math.min(65, sel));
+
+    document.getElementById("selTemp").innerHTML =
+        (mode==="atm") ? ("SEL " + sel + "°C") : "FULL";
 
     var weightFactor = (w - 65000) * 0.0011;
     var tempFactor = (t - 15) * 0.22;
@@ -321,12 +317,6 @@ function calcTakeoff(){
     vr = Math.round(vr + 8);
     v2 = Math.round(v2 + 8);
 
-    document.getElementById("toOut").innerHTML =
-        "MODE: " + mode.toUpperCase() + "<br>" +
-        "V1: " + v1 + "<br>" +
-        "VR: " + vr + "<br>" +
-        "V2: " + v2;
-
     document.getElementById("v1b").innerHTML = v1;
     document.getElementById("vrb").innerHTML = vr;
     document.getElementById("v2b").innerHTML = v2;
@@ -339,11 +329,14 @@ function calcLanding(){
     var windv = wind(document.getElementById("lwind").value);
 
     var vref = 130 + (w - 60000) * 0.00055 + windv * 0.15;
-    var dist = 1400 * (0.7 + w / 70000) * (1 + (t - 15) * 0.01);
 
-    document.getElementById("loOut").innerHTML =
-        "VREF: " + Math.round(vref) + "<br>" +
-        "LDG DIST: " + Math.round(dist) + " m";
+    document.getElementById("modeDisplay").innerHTML = "LDG";
+    document.getElementById("tow").innerHTML = "LDG WT " + w;
+    document.getElementById("selTemp").innerHTML = "";
+
+    document.getElementById("v1b").innerHTML = "-";
+    document.getElementById("vrb").innerHTML = "-";
+    document.getElementById("v2b").innerHTML = Math.round(vref);
 }
 
 </script>
