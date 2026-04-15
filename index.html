@@ -121,18 +121,23 @@ input, select {
     font-weight:700;
 }
 
-/* SPEED STRIP */
+/* SPEED STRIP FIXED */
 .vstrip {
     display:flex;
     justify-content:space-between;
     align-items:flex-end;
     z-index:2;
+    gap:10px;
 }
 
-.vsmall {
+/* FORCE WIDTHS */
+.vcell {
+    flex:1;
     text-align:center;
+    min-width:80px;
 }
 
+/* SMALL CELLS */
 .vsmall .vlabel {
     font-size:11px;
     color:#666;
@@ -142,10 +147,7 @@ input, select {
     font-size:20px;
 }
 
-.vbigblock {
-    text-align:center;
-}
-
+/* BIG SPEED CELLS */
 .vbigblock .vlabel {
     font-size:12px;
     color:#888;
@@ -156,8 +158,9 @@ input, select {
     font-weight:900;
 }
 
-.spacer {
-    flex:0.5;
+/* EXTRA SPACING BETWEEN CONFIG AND SPEEDS */
+.divider {
+    width:20px;
 }
 
 </style>
@@ -170,12 +173,10 @@ input, select {
 <div class="main">
 
 <div class="sidebar">
-    <div class="tab active" onclick="showPanel('tko', this)">TKO</div>
+    <div class="tab active">TKO</div>
 </div>
 
 <div class="content">
-
-<div id="tkoPanel">
 
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
 <div class="row"><span class="label">CG</span><input id="tcg" value="25"></div>
@@ -206,33 +207,31 @@ input, select {
 
 <div class="vstrip">
 
-<div class="vsmall">
+<div class="vcell vsmall">
 <div class="vlabel">FLAP</div>
 <div class="vbig">5</div>
 </div>
 
-<div class="vsmall">
+<div class="vcell vsmall">
 <div class="vlabel">ACCEL HT</div>
 <div class="vbig">1500</div>
 </div>
 
-<div class="spacer"></div>
+<div class="divider"></div>
 
-<div class="vbigblock">
+<div class="vcell vbigblock">
 <div class="vlabel">V1</div>
 <div class="vbig" id="v1b">---</div>
 </div>
 
-<div class="vbigblock">
+<div class="vcell vbigblock">
 <div class="vlabel">VR</div>
 <div class="vbig" id="vrb">---</div>
 </div>
 
-<div class="vbigblock">
+<div class="vcell vbigblock">
 <div class="vlabel">V2</div>
 <div class="vbig" id="v2b">---</div>
-</div>
-
 </div>
 
 </div>
@@ -249,6 +248,13 @@ function num(v){
     return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
 }
 
+/* DETECT UNIT */
+function getUnit(v){
+    v = (v+"").toLowerCase();
+    if(v.includes("lb")) return "LB";
+    return "KG";
+}
+
 function wind(v){
     v = (v+"").split("/");
     return num(v.length > 1 ? v[1] : v[0]);
@@ -263,7 +269,10 @@ function runwayLength(v){
 
 function calcTakeoff(){
 
-    var w = num(document.getElementById("tw").value);
+    var raw = document.getElementById("tw").value;
+    var unit = getUnit(raw);
+    var w = num(raw);
+
     var t = num(document.getElementById("tt").value);
     var press = num(document.getElementById("tpress").value);
     var windv = wind(document.getElementById("twind").value);
@@ -273,9 +282,9 @@ function calcTakeoff(){
     var rwylength = runwayLength(document.getElementById("rwylength").value);
 
     document.getElementById("atmLabel").innerHTML = (mode === "atm") ? "ATM" : "FULL";
-    document.getElementById("tow").innerHTML = "TOW " + w;
+    document.getElementById("tow").innerHTML = "TOW " + w + " " + unit;
 
-    /* ✅ FIXED SEL TEMP (-20°C bias) */
+    /* SEL TEMP FIXED */
     var sel = Math.round(15 - (w-65000)/200 - (t-15)*1.2 - (1013-press)*0.05);
     sel = Math.max(20, Math.min(55, sel));
 
