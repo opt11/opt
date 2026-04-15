@@ -5,7 +5,6 @@
 <title>B737 OPT</title>
 
 <style>
-
 body { margin:0; font-family:Arial; background:#0b0f14; color:#fff; }
 
 .topbar {
@@ -15,7 +14,7 @@ body { margin:0; font-family:Arial; background:#0b0f14; color:#fff; }
     font-size:13px;
 }
 
-/* ROW WITH 2 SIDES */
+/* ROW */
 .row {
     display:flex;
     justify-content:space-between;
@@ -91,7 +90,6 @@ input, select {
 
 .vsmall .vbig { font-size:28px; }
 .vbigblock .vbig { font-size:56px; font-weight:900; }
-
 </style>
 </head>
 
@@ -99,20 +97,20 @@ input, select {
 
 <div class="topbar">PERFORMANCE</div>
 
-<!-- PAIRED INPUTS -->
+<!-- INPUTS -->
 
 <div class="row">
-<div class="half"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
-<div class="half"><span class="label">CG</span><input id="cg" value="25"></div>
+<div class="half"><span class="label">WEIGHT</span><input id="tw" value="51600kg"></div>
+<div class="half"><span class="label">CG</span><input id="cg" value="22.4"></div>
 </div>
 
 <div class="row">
-<div class="half"><span class="label">OAT</span><input id="tt" value="15C"></div>
-<div class="half"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
+<div class="half"><span class="label">OAT</span><input id="tt" value="11C"></div>
+<div class="half"><span class="label">PRESS</span><input id="tpress" value="1015hPa"></div>
 </div>
 
 <div class="row">
-<div class="half"><span class="label">RWY LEN</span><input id="rwylength" value="3000m"></div>
+<div class="half"><span class="label">RWY LEN</span><input id="rwylength" value="6500ft"></div>
 <div class="half">
 <span class="label">FLAPS</span>
 <select id="flap">
@@ -129,7 +127,7 @@ input, select {
 <span class="label">ATM MODE</span>
 <select id="atmMode">
 <option value="max">MAX</option>
-<option value="opt">OPT</option>
+<option value="opt" selected>OPT</option>
 <option value="full">FULL</option>
 </select>
 </div>
@@ -178,7 +176,7 @@ input, select {
 
 <div class="bottom">
 
-<div class="atm-inline" id="modeLabel">ATM</div>
+<div class="atm-inline" id="modeLabel">OPT</div>
 
 <div class="topline">
 <div class="tow" id="tow">TOWG ---</div>
@@ -223,54 +221,81 @@ input, select {
 
 <script>
 
-function num(v){ return parseFloat((v+"").replace(/[^0-9.\-]/g,""))||0; }
+/* iOS SAFE */
+function num(v){
+    return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
+}
 
 function calc(){
 
-var w = num(tw.value);
-var cgVal = num(cg.value);
-var len = num(rwylength.value);
+var w = num(document.getElementById("tw").value);
+var cgVal = num(document.getElementById("cg").value);
+var len = num(document.getElementById("rwylength").value);
+var oat = num(document.getElementById("tt").value);
 
-var flapSel = flap.value;
+var flapSel = document.getElementById("flap").value;
+
+/* OPT FLAP */
 if(flapSel==="opt"){
-    if(len<1800) flapSel="15";
-    else if(len<2600) flapSel="5";
+    if(len < 6000) flapSel="15";
+    else if(len < 8000) flapSel="5";
     else flapSel="1";
 }
 
-flapOut.innerHTML = flapSel;
+document.getElementById("flapOut").innerHTML = flapSel;
 
-/* TOWG */
-var towg = w - 200;
-tow.innerHTML = "TOWG "+Math.round(towg)+" kg";
+/* TOWG (realistic) */
+var towg = w + 50;
+document.getElementById("tow").innerHTML = "TOWG " + Math.round(towg) + " kg";
 
-/* SEL */
-var selTemp = 40;
-sel.innerHTML = "SEL "+Math.round(selTemp)+"°C";
+/* SEL TEMP */
+var selTemp = 45 - (w / 2000) - (len / 1000);
+
+/* penalties */
+if(document.getElementById("anti").value==="on") selTemp -= 3;
+if(document.getElementById("packs").value==="on") selTemp -= 2;
+
+if(selTemp < oat + 5) selTemp = oat + 5;
+
+document.getElementById("sel").innerHTML = "SEL " + Math.round(selTemp) + "°C";
 
 /* ACCEL */
 var accelHt = 1500;
-if(w>70000) accelHt+=500;
-if(len<2200) accelHt+=500;
-accel.innerHTML = accelHt;
+if(w > 70000) accelHt += 500;
+if(len < 7000) accelHt += 500;
 
-/* TRIM */
-var trimVal = 6 - (cgVal-20)*0.1;
-trim.innerHTML = trimVal.toFixed(1);
+document.getElementById("accel").innerHTML = accelHt;
+
+/* TRIM (more realistic curve) */
+var trimVal = 7.5 - (cgVal * 0.12);
+document.getElementById("trim").innerHTML = trimVal.toFixed(1);
 
 /* SPEEDS */
-var v1v = 132;
-var vrv = 134;
-var v2v = 144;
+var base = 115 + (w / 2000);
 
+var v1v = base;
+var vrv = base + 1;
+var v2v = base + 11;
+
+/* flap effects */
 if(flapSel==="1"){ v1v+=5; vrv+=5; v2v+=5; }
+if(flapSel==="5"){ v1v-=2; vrv-=2; v2v-=2; }
 if(flapSel==="15"){ v1v-=6; vrv-=6; v2v-=6; }
 
-v1.innerHTML = v1v;
-vr.innerHTML = vrv;
-v2.innerHTML = v2v;
+/* runway effect */
+if(len < 7000){
+    v1v -= 3;
+    vrv -= 2;
+}
 
-modeLabel.innerHTML="ATM";
+/* rounding */
+document.getElementById("v1").innerHTML = Math.round(v1v);
+document.getElementById("vr").innerHTML = Math.round(vrv);
+document.getElementById("v2").innerHTML = Math.round(v2v);
+
+/* ATM watermark */
+document.getElementById("modeLabel").innerHTML =
+document.getElementById("atmMode").value.toUpperCase();
 
 }
 
