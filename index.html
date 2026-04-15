@@ -21,10 +21,20 @@ body {
     color:#9aa4b2;
 }
 
+/* GRID LAYOUT */
 .main {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
     padding:12px;
 }
 
+.column {
+    background:#0e131a;
+    padding:12px;
+}
+
+/* ROWS */
 .row {
     display:flex;
     justify-content:space-between;
@@ -42,25 +52,25 @@ input, select {
     border:none;
     border-bottom:1px solid #2a3240;
     color:#fff;
-    width:130px;
+    width:120px;
     text-align:right;
 }
 
+/* BUTTON */
 .button {
-    margin-top:15px;
-    width:100%;
+    margin:15px 12px;
+    width:calc(100% - 24px);
     background:#1f2633;
     border:1px solid #2f394a;
-    padding:10px;
-    font-size:13px;
+    padding:12px;
     color:#fff;
 }
 
 /* DISPLAY */
 .bottom {
-    margin-top:15px;
+    margin:12px;
     background:#000;
-    height:260px;
+    height:280px;
     position:relative;
     padding:20px;
     display:flex;
@@ -68,7 +78,6 @@ input, select {
     justify-content:space-between;
 }
 
-/* WATERMARK */
 .atm-inline {
     position:absolute;
     top:50%;
@@ -77,7 +86,6 @@ input, select {
     font-size:220px;
     font-weight:900;
     opacity:0.05;
-    letter-spacing:18px;
 }
 
 /* TOP */
@@ -88,12 +96,12 @@ input, select {
 }
 
 .tow {
-    font-size:40px;
+    font-size:42px;
     font-weight:900;
 }
 
 .sel {
-    font-size:26px;
+    font-size:28px;
     font-weight:700;
 }
 
@@ -111,30 +119,14 @@ input, select {
     text-align:center;
 }
 
-/* CONFIG BIGGER */
-.vsmall .vlabel {
-    font-size:12px;
-    color:#666;
-}
-
 .vsmall .vbig {
     font-size:30px;
     font-weight:700;
 }
 
-/* SPEEDS */
-.vbigblock .vlabel {
-    font-size:12px;
-    color:#888;
-}
-
 .vbigblock .vbig {
     font-size:56px;
     font-weight:900;
-}
-
-.divider {
-    width:20px;
 }
 
 </style>
@@ -146,13 +138,29 @@ input, select {
 
 <div class="main">
 
+<!-- LEFT COLUMN -->
+<div class="column">
+
 <div class="row"><span class="label">WEIGHT</span><input id="tw" value="65000kg"></div>
-<div class="row"><span class="label">CG</span><input value="25"></div>
+<div class="row"><span class="label">CG</span><input id="cg" value="25"></div>
 <div class="row"><span class="label">OAT</span><input id="tt" value="15C"></div>
-<div class="row"><span class="label">WIND</span><input id="twind" value="150/5KT"></div>
 <div class="row"><span class="label">PRESS</span><input id="tpress" value="1013hPa"></div>
-<div class="row"><span class="label">RWY HDG</span><input id="rwyhdg" value="090"></div>
 <div class="row"><span class="label">RWY LEN</span><input id="rwylength" value="3000m"></div>
+
+<div class="row">
+<span class="label">FLAPS</span>
+<select id="flap">
+<option value="opt">OPTIMUM</option>
+<option value="1">1</option>
+<option value="5">5</option>
+<option value="15">15</option>
+</select>
+</div>
+
+</div>
+
+<!-- RIGHT COLUMN -->
+<div class="column">
 
 <div class="row">
 <span class="label">ATM MODE</span>
@@ -165,53 +173,84 @@ input, select {
 
 <div class="row">
 <span class="label">RWY COND</span>
-<select id="rwycond">
+<select id="cond">
 <option value="dry">DRY</option>
 <option value="wet">WET</option>
 <option value="cont">CONT</option>
 </select>
 </div>
 
-<button class="button" onclick="calcTakeoff()">CALCULATE</button>
+<div class="row">
+<span class="label">ANTI ICE</span>
+<select id="anti">
+<option value="off">OFF</option>
+<option value="on">ON</option>
+</select>
+</div>
 
+<div class="row">
+<span class="label">AIR COND</span>
+<select id="packs">
+<option value="on">ON</option>
+<option value="off">OFF</option>
+</select>
+</div>
+
+<div class="row">
+<span class="label">RTG</span>
+<select id="rtg">
+<option value="0">OFF</option>
+<option value="1">RTG1</option>
+<option value="2">RTG2</option>
+</select>
+</div>
+
+</div>
+
+</div>
+
+<button class="button" onclick="calc()">CALCULATE</button>
+
+<!-- DISPLAY -->
 <div class="bottom">
 
-<div class="atm-inline" id="atmLabel">ATM</div>
+<div class="atm-inline" id="modeLabel">ATM</div>
 
 <div class="topline">
     <div class="tow" id="tow">TOWG ---</div>
-    <div class="sel" id="selTemp">SEL ---</div>
+    <div class="sel" id="sel">SEL ---</div>
 </div>
 
 <div class="vstrip">
 
 <div class="vcell vsmall">
-<div class="vlabel">FLAP</div>
-<div class="vbig">5</div>
+<div>FLAP</div>
+<div class="vbig" id="flapOut">--</div>
 </div>
 
 <div class="vcell vsmall">
-<div class="vlabel">ACCEL HT</div>
+<div>ACCEL HT</div>
 <div class="vbig" id="accel">1500</div>
 </div>
 
-<div class="divider"></div>
-
-<div class="vcell vbigblock">
-<div class="vlabel">V1</div>
-<div class="vbig" id="v1b">---</div>
+<div class="vcell vsmall">
+<div>TRIM</div>
+<div class="vbig" id="trim">--</div>
 </div>
 
 <div class="vcell vbigblock">
-<div class="vlabel">VR</div>
-<div class="vbig" id="vrb">---</div>
+<div>V1</div>
+<div class="vbig" id="v1">---</div>
 </div>
 
 <div class="vcell vbigblock">
-<div class="vlabel">V2</div>
-<div class="vbig" id="v2b">---</div>
+<div>VR</div>
+<div class="vbig" id="vr">---</div>
 </div>
 
+<div class="vcell vbigblock">
+<div>V2</div>
+<div class="vbig" id="v2">---</div>
 </div>
 
 </div>
@@ -220,97 +259,94 @@ input, select {
 
 <script>
 
-function num(v){
-    return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0;
+function num(v){ return parseFloat((v+"").replace(/[^0-9.\-]/g,"")) || 0; }
+function getUnit(v){ return (v+"").toLowerCase().includes("lb") ? "LB":"KG"; }
+function toKg(v,u){ return u==="LB"?v*0.453592:v; }
+function fromKg(v,u){ return u==="LB"?v/0.453592:v; }
+
+function calc(){
+
+let raw = tw.value;
+let unit = getUnit(raw);
+let w = num(raw);
+let wkg = toKg(w,unit);
+
+let cgVal = num(cg.value);
+let t = num(tt.value);
+let press = num(tpress.value);
+let len = num(rwylength.value);
+
+let atm = atmMode.value;
+let condVal = cond.value;
+let antiVal = anti.value;
+let packsVal = packs.value;
+let rtgVal = parseInt(rtg.value);
+
+/* TOWG */
+let towg = wkg - (200 + (wkg-65000)*0.002);
+tow.innerHTML = "TOWG " + Math.round(fromKg(towg,unit)) + " " + unit;
+
+/* FLAP LOGIC */
+let flapSel = flap.value;
+if(flapSel === "opt"){
+    if(len < 1800) flapSel = "15";
+    else if(len < 2600) flapSel = "5";
+    else flapSel = "1";
 }
+flapOut.innerHTML = flapSel;
 
-function getUnit(v){
-    v = (v+"").toLowerCase();
-    if(v.includes("lb")) return "LB";
-    return "KG";
-}
+/* SEL TEMP */
+let selTemp = 40 - (wkg-65000)/180 - (t-15)*1.1;
 
-function toKg(v, unit){
-    return (unit==="LB") ? v * 0.453592 : v;
-}
+if(atm==="max") selTemp+=10;
+if(atm==="full") selTemp=0;
 
-function fromKg(v, unit){
-    return (unit==="LB") ? v / 0.453592 : v;
-}
+if(condVal==="wet") selTemp-=5;
+if(condVal==="cont") selTemp-=10;
+if(antiVal==="on") selTemp-=5;
+if(packsVal==="on") selTemp-=3;
 
-function wind(v){
-    v = (v+"").split("/");
-    return num(v.length > 1 ? v[1] : v[0]);
-}
+selTemp -= rtgVal*5;
 
-function runwayLength(v){
-    v = (v+"").toLowerCase();
-    var value = parseFloat(v.replace(/[^0-9.]/g,"")) || 0;
-    if(v.indexOf("ft") !== -1) return value * 0.3048;
-    return value;
-}
+/* flap effect */
+if(flapSel==="1") selTemp+=5;
+if(flapSel==="15") selTemp-=8;
 
-function calcTakeoff(){
+selTemp = Math.max(20, Math.min(65, selTemp));
 
-    var raw = document.getElementById("tw").value;
-    var unit = getUnit(raw);
-    var w = num(raw);
+sel.innerHTML = (atm==="full") ? "FULL" : "SEL "+Math.round(selTemp)+"°C";
 
-    var wkg = toKg(w, unit);
+/* ACCEL HT */
+let accelHt = 1500;
+if(wkg>70000) accelHt+=500;
+if(len<2200) accelHt+=500;
+accel.innerHTML = accelHt;
 
-    var t = num(document.getElementById("tt").value);
-    var press = num(document.getElementById("tpress").value);
-    var windv = wind(document.getElementById("twind").value);
-    var atmMode = document.getElementById("atmMode").value;
-    var cond = document.getElementById("rwycond").value;
+/* TRIM */
+let trimVal = 6 - (cgVal-20)*0.1 - (wkg-65000)*0.00002;
+if(flapSel==="1") trimVal-=0.2;
+if(flapSel==="15") trimVal+=0.3;
+trim.innerHTML = trimVal.toFixed(1);
 
-    var rwylength = runwayLength(document.getElementById("rwylength").value);
+/* SPEEDS */
+let v1v = 132 + (wkg-65000)*0.001;
+let vrv = v1v + 2;
+let v2v = vrv + 10;
 
-    /* TOWG CALC */
-    var taxiBurn = 200 + (wkg - 65000) * 0.002;
-    var towg = wkg - taxiBurn;
+if(condVal==="wet"){ v1v+=2; vrv+=2; v2v+=2; }
+if(condVal==="cont"){ v1v+=4; vrv+=4; v2v+=4; }
+if(antiVal==="on"){ v1v+=1; vrv+=1; v2v+=1; }
 
-    var towgDisplay = Math.round(fromKg(towg, unit));
-    document.getElementById("tow").innerHTML = "TOWG " + towgDisplay + " " + unit;
+if(flapSel==="1"){ v1v+=5; vrv+=5; v2v+=5; }
+if(flapSel==="15"){ v1v-=6; vrv-=6; v2v-=6; }
 
-    document.getElementById("atmLabel").innerHTML =
-        (atmMode === "full") ? "FULL" : "ATM";
+v1.innerHTML = Math.round(v1v);
+vr.innerHTML = Math.round(vrv);
+v2.innerHTML = Math.round(v2v);
 
-    /* SEL TEMP */
-    var baseSel = 40 - (wkg-65000)/180 - (t-15)*1.1;
+/* MODE */
+modeLabel.innerHTML = (atm==="full")?"FULL":"ATM";
 
-    if(atmMode === "max") baseSel += 10;
-    if(atmMode === "full") baseSel = 0;
-
-    if(cond === "wet") baseSel -= 5;
-    if(cond === "cont") baseSel -= 10;
-
-    var sel = Math.round(baseSel);
-    sel = Math.max(20, Math.min(65, sel));
-
-    document.getElementById("selTemp").innerHTML =
-        (atmMode==="full") ? "FULL" : ("SEL " + sel + "°C");
-
-    /* ACCEL HEIGHT */
-    var accel = 1500;
-    if(wkg > 70000) accel += 500;
-    if(rwylength < 2200) accel += 500;
-    if(rwylength < 1800) accel += 500;
-    accel = Math.min(3000, accel);
-
-    document.getElementById("accel").innerHTML = accel;
-
-    /* SPEEDS */
-    var v1 = 132 + (wkg-65000)*0.0011;
-    var vr = v1 + 2;
-    var v2 = vr + 10;
-
-    if(cond === "wet"){ v1+=2; vr+=2; v2+=2; }
-    if(cond === "cont"){ v1+=4; vr+=4; v2+=4; }
-
-    document.getElementById("v1b").innerHTML = Math.round(v1);
-    document.getElementById("vrb").innerHTML = Math.round(vr);
-    document.getElementById("v2b").innerHTML = Math.round(v2);
 }
 
 </script>
