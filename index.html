@@ -234,12 +234,12 @@ if(flapSel==="opt"){
 
 document.getElementById("flapOut").innerHTML = flapSel;
 
-/* TOWG (never exceed input weight) */
-var towg = w - 50;
+/* TOWG (correct reduction) */
+var towg = w - 200;
 document.getElementById("tow").innerHTML = "TOWG " + Math.round(towg) + " kg";
 
-/* FLEX (more realistic low values) */
-var selTemp = 30 - (w / 4000) - (len / 2000);
+/* FLEX (raised into realistic range) */
+var selTemp = 55 - (w / 4000) - (len / 2000);
 
 if(document.getElementById("anti").value==="on") selTemp -= 2;
 if(document.getElementById("packs").value==="on") selTemp -= 1;
@@ -257,8 +257,8 @@ document.getElementById("accel").innerHTML = accelHt;
 var trimVal = 7.2 - (cgVal * 0.12);
 document.getElementById("trim").innerHTML = trimVal.toFixed(1);
 
-/* SPEEDS (lowered baseline) */
-var base = 100 + (w / 3000);
+/* SPEEDS (raised ~10kts) */
+var base = 110 + (w / 3000);
 
 var v1v = base;
 var vrv = base + 1;
@@ -277,14 +277,9 @@ document.getElementById("v1").innerHTML = Math.round(v1v);
 document.getElementById("vr").innerHTML = Math.round(vrv);
 document.getElementById("v2").innerHTML = Math.round(v2v);
 
-/* WATERMARK LOGIC */
+/* WATERMARK */
 var mode = document.getElementById("atmMode").value;
-
-if(mode === "full"){
-    document.getElementById("modeLabel").innerHTML = "FULL";
-} else {
-    document.getElementById("modeLabel").innerHTML = "ATM";
-}
+document.getElementById("modeLabel").innerHTML = (mode === "full") ? "FULL" : "ATM";
 
 }
 
